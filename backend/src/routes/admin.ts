@@ -1,0 +1,103 @@
+import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import { z } from 'zod';
+import { prisma } from '../lib/prisma';
+import { requireAdmin } from '../middleware/auth';
+
+const router = Router();
+
+router.get('/stats', requireAdmin, async (_req, res) => {
+  const [userCount, deviceCount, activeDevices, callCount, smsCount, notificationCount] =
+    await Promise.all([
+      prisma.user.count({ where: { role: 'parent' } }),
+      prisma.device.count(),
+      prisma.device.count({
+        where: { lastSeen: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+      }),
+      prisma.callLog.count(),
+      prisma.smsMessage.count(),
+      prisma.notification.count(),
+    ]);
+  res.json({ userCount, deviceCount, activeDevices, callCount, smsCount, notificationCount });
+});
+
+router.get('/users', requireAdmin, async (_req, res) => {
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+      _count: { select: { devices: true } },
+    },
+  });
+  res.json(users);
+});
+
+router.post('/users', requireAdmin, async (req, res) => {
+  try {
+    const schema = z.object({
+      email: z.string().email(),
+      password: z.string().min(6),
+      role: z.enum(['parent', 'admin']).default('parent'),
+    });
+    const { email, password, role } = schema.parse(req.body);
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) return res.status(400).json({ error: 'E-posta zaten kayıtlı' });
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = await prisma.user.create({
+      data: { email, passwordHash, role },
+      select: { id: true, email: true, role: true, isActive: true, createdAt: true },
+    });
+    res.status(201).json(user);
+  } catch (e) {
+    if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    res.status(500).json({ error: 'Kullanıcı oluşturulamadı' });
+  }
+});
+
+router.patch('/users/:id', requireAdmin, async (req, res) => {
+  try {
+    const schema = z.object({
+      isActive: z.boolean().optional(),
+      role: z.enum(['parent', 'admin']).optional(),
+    });
+    const data = schema.parse(req.body);
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data,
+      select: { id: true, email: true, role: true, isActive: true },
+    });
+    res.json(user);
+  } catch (e) {
+    if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    res.status(500).json({ error: 'Güncelleme başarısız' });
+  }
+});
+
+router.get('/devices', requireAdmin, async (_req, res) => {
+  const devices = await prisma.device.findMany({
+    orderBy: { lastSeen: 'desc' },
+    include: { user: { select: { email: true } } },
+  });
+  res.json(devices);
+});
+
+router.patch('/devices/:id', requireAdmin, async (req, res) => {
+  try {
+    const schema = z.object({ isActive: z.boolean() });
+    const { isActive } = schema.parse(req.body);
+    const device = await prisma.device.update({
+      where: { id: req.params.id },
+      data: { isActive },
+    });
+    res.json(device);
+  } catch (e) {
+    if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    res.status(500).json({ error: 'Güncelleme başarısız' });
+  }
+});
+
+export default router;

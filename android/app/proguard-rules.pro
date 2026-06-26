@@ -1,0 +1,2 @@
+-keep class com.takip.app.** { *; }
+-dontwarn okhttp3.**

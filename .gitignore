@@ -1,0 +1,27 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+.next/
+build/
+*.log
+.DS_Store
+Thumbs.db
+
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+android/*.iml
+android/.idea/
+*.keystore
+!android/debug.keystore
+
+# Prisma
+backend/prisma/migrations/**/migration_lock.toml
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# Uploads
+backend/uploads/

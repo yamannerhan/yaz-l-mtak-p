@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aile Takip</string>
+    <string name="setup_title">Kurulum</string>
+    <string name="setup_subtitle">Panel adresinizi ve hesabınızı girin</string>
+    <string name="panel_url">Panel Adresi</string>
+    <string name="email">E-posta</string>
+    <string name="password">Şifre</string>
+    <string name="device_name">Cihaz Adı</string>
+    <string name="connect">Bağlan ve Kur</string>
+    <string name="service_notification_title">Aile Takip aktif</string>
+    <string name="service_notification_text">Cihaz koruması çalışıyor</string>
+    <string name="hidden_settings_title">Ayarlar</string>
+    <string name="hide_app">Uygulamayı Gizle</string>
+    <string name="accessibility_description">Ebeveyn kontrolü ve güvenlik servisi</string>
+    <string name="show_status">Durum</string>
+</resources>

@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: takip
+      POSTGRES_PASSWORD: takip_secret
+      POSTGRES_DB: takip_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://takip:takip_secret@postgres:5432/takip_db
+      JWT_SECRET: change-me-in-production
+      ADMIN_EMAIL: admin@takip.local
+      ADMIN_PASSWORD: Admin123!
+      PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
