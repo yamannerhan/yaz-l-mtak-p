@@ -44,10 +44,10 @@ async function ensureAdmin() {
   }
 }
 
-app.listen(PORT, async () => {
+app.listen(Number(PORT), '0.0.0.0', async () => {
   try {
     await ensureAdmin();
-    console.log(`Backend çalışıyor: http://localhost:${PORT}`);
+    console.log(`Backend çalışıyor: port ${PORT}`);
   } catch (e) {
     console.error('Başlatma hatası:', e);
   }
