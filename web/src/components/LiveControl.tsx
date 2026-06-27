@@ -10,7 +10,7 @@ const COMMANDS = [
   { type: 'location' as const, label: 'Anlık konum', icon: '📍' },
 ];
 
-export function LiveControl({ deviceId, online }: { deviceId: string; online: boolean }) {
+export function LiveControl({ deviceId }: { deviceId: string }) {
   const [loading, setLoading] = useState<string | null>(null);
   const [result, setResult] = useState<DeviceCommand | null>(null);
   const [error, setError] = useState('');
@@ -22,7 +22,7 @@ export function LiveControl({ deviceId, online }: { deviceId: string; online: bo
     try {
       const cmd = await api.createCommand(deviceId, type);
       let current = cmd;
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 30; i++) {
         await new Promise((r) => setTimeout(r, 2000));
         current = await api.getCommand(deviceId, cmd.id);
         if (current.status !== 'pending') break;
@@ -30,6 +30,8 @@ export function LiveControl({ deviceId, online }: { deviceId: string; online: bo
       setResult(current);
       if (current.status === 'failed') {
         setError(current.errorMsg || 'Komut başarısız');
+      } else if (current.status === 'pending') {
+        setError('Telefon henüz yanıt vermedi. Biraz sonra tekrar deneyin.');
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Komut gönderilemedi');
@@ -42,14 +44,8 @@ export function LiveControl({ deviceId, online }: { deviceId: string; online: bo
     <div className="data-card">
       <h3 className="font-semibold mb-1">Canlı kontrol</h3>
       <p className="text-sm text-gray-500 mb-4">
-        Telefondan anında ekran, kamera veya konum alın (15 sn içinde yanıt)
+        İstediğiniz zaman ekran, kamera veya konum alın
       </p>
-
-      {!online && (
-        <div className="mb-4 p-3 rounded-xl bg-amber-50 text-amber-800 text-sm">
-          Cihaz çevrimdışı görünüyor. Komut kuyruğa alınır, telefon bağlanınca çalışır.
-        </div>
-      )}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {COMMANDS.map((cmd) => (

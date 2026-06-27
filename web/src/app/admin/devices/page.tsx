@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api, Device, formatDate, isOnline } from '@/lib/api';
+import { api, Device, formatDate, onlineLabel } from '@/lib/api';
 
 export default function AdminDevicesPage() {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -37,8 +37,8 @@ export default function AdminDevicesPage() {
                 <td className="p-4">{d.user?.email}</td>
                 <td className="p-4">{d.apkVersion}</td>
                 <td className="p-4">
-                  <span className={isOnline(d.lastSeen) ? 'badge-green' : 'badge-gray'}>
-                    {d.isActive ? (isOnline(d.lastSeen) ? 'Çevrimiçi' : 'Çevrimdışı') : 'Devre dışı'}
+                  <span className={d.isActive ? 'badge-green' : 'badge-gray'}>
+                    {d.isActive ? onlineLabel(d.lastSeen) : 'Devre dışı'}
                   </span>
                 </td>
                 <td className="p-4 text-gray-500">{d.lastSeen ? formatDate(d.lastSeen) : '-'}</td>

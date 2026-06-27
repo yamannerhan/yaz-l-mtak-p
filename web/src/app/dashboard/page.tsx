@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api, Device, isOnline, onlineLabel, formatDate } from '@/lib/api';
+import { api, Device, onlineLabel, formatDate } from '@/lib/api';
 import Link from 'next/link';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { PermissionPanel } from '@/components/PermissionPanel';
@@ -68,21 +68,18 @@ export default function DashboardPage() {
                     {' · '}v{device.apkVersion}
                   </p>
                 </div>
-                <span className={isOnline(device.lastSeen) ? 'badge-green' : 'badge-gray'}>
+                <span className="badge-green">
                   {onlineLabel(device.lastSeen)}
                 </span>
               </div>
               <p className="text-sm text-gray-500 mb-2">
-                Son senkron (bulut): {device.lastSeen ? formatDate(device.lastSeen) : 'Hiç'}
-              </p>
-              <p className="text-xs text-gray-400 mb-2">
-                Bilgisayarınız kapalı olsa da telefon Railway sunucusuna bağlanır.
+                Son senkron: {device.lastSeen ? formatDate(device.lastSeen) : 'Henüz yok'}
               </p>
 
               <PermissionPanel device={device} />
 
               <div className="mt-4">
-                <LiveControl deviceId={device.id} online={isOnline(device.lastSeen)} />
+                <LiveControl deviceId={device.id} />
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">

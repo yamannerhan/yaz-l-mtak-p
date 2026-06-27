@@ -11,8 +11,8 @@ android {
         applicationId = "com.takip.app"
         minSdk = 26
         targetSdk = 31
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
     }
 
     signingConfigs {

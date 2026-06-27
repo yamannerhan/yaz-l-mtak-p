@@ -239,16 +239,10 @@ export function formatDate(iso: string) {
   return new Date(iso).toLocaleString('tr-TR');
 }
 
-export function isOnline(lastSeen: string | null) {
-  if (!lastSeen) return false;
-  // Telefon Railway'e 15 sn'de bir bağlanır; 30 dk tolerans (PC kapalı olsa da cloud çalışır)
-  return Date.now() - new Date(lastSeen).getTime() < 30 * 60 * 1000;
+export function isOnline(_lastSeen: string | null, isActive = true) {
+  return isActive;
 }
 
 export function onlineLabel(lastSeen: string | null) {
-  if (!lastSeen) return 'Henüz bağlanmadı';
-  const ms = Date.now() - new Date(lastSeen).getTime();
-  if (ms < 2 * 60 * 1000) return 'Çevrimiçi';
-  if (ms < 30 * 60 * 1000) return 'Aktif';
-  return 'Çevrimdışı';
+  return lastSeen ? 'Bağlı' : 'İlk bağlantı bekleniyor';
 }

