@@ -11,8 +11,13 @@ android {
         applicationId = "com.takip.app"
         minSdk = 26
         targetSdk = 31
-        versionCode = 8
-        versionName = "1.0.7"
+        versionCode = 9
+        versionName = "1.0.8"
+        buildConfigField(
+            "String",
+            "DEFAULT_PANEL_URL",
+            "\"https://authentic-strength-production-6dd0.up.railway.app\""
+        )
     }
 
     signingConfigs {

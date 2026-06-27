@@ -21,7 +21,7 @@ function CallsContent() {
       title="Aramalar"
       subtitle="Gelen, giden ve cevapsız aramalar"
       emptyTitle="Arama kaydı yok"
-      emptyHint="Telefonda arama kaydı izni verilmiş olmalı. Veriler 30 saniyede bir yüklenir."
+      emptyHint="Telefonda arama kaydı izni verilmiş olmalı. Veriler 5 saniyede bir yüklenir."
       isEmpty={page.data.length === 0}
       skeleton={<TableSkeleton />}
       extraFilters={

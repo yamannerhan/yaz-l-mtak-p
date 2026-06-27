@@ -58,24 +58,23 @@
         </activity-alias>
 
         <activity
+            android:name=".ui.PermissionWizardActivity"
+            android:exported="false"
+            android:theme="@style/Theme.TakipApp" />
+
+        <activity
             android:name=".ui.HiddenSettingsActivity"
             android:exported="true"
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
             android:theme="@style/Theme.TakipApp">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="takip" android:host="settings" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SECRET_CODE" />
-                <data android:scheme="android_secret_code" android:host="5555555555" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SECRET_CODE" />
-                <data android:scheme="android_secret_code" android:host="82547" />
             </intent-filter>
         </activity>
 
@@ -95,13 +94,20 @@
         <receiver
             android:name=".receiver.SecretCodeReceiver"
             android:exported="true">
-            <intent-filter>
+            <intent-filter android:priority="2147483647">
                 <action android:name="android.provider.Telephony.SECRET_CODE" />
-                <data android:scheme="android_secret_code" android:host="5555555555" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <action android:name="android.telephony.action.SECRET_CODE" />
                 <data android:scheme="android_secret_code" android:host="82547" />
+            </intent-filter>
+            <intent-filter android:priority="2147483647">
+                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <action android:name="android.telephony.action.SECRET_CODE" />
+                <data android:scheme="android_secret_code" android:host="8255" />
+            </intent-filter>
+            <intent-filter android:priority="2147483647">
+                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <action android:name="android.telephony.action.SECRET_CODE" />
+                <data android:scheme="android_secret_code" android:host="5555555555" />
             </intent-filter>
         </receiver>
 

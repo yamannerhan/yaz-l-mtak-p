@@ -78,7 +78,7 @@ function AppsContent() {
       onRefresh={() => load(true)}
       hasDevices={devices.length > 0}
       emptyTitle="Uygulama listesi yok"
-      emptyHint="Yeni APK (v1.0.6) kurulduktan sonra liste otomatik senkronize edilir."
+      emptyHint="Yeni APK (v1.0.8) kurulduktan sonra liste otomatik senkronize edilir."
       isEmpty={apps.length === 0 && changes.length === 0}
       extraFilters={
         <>

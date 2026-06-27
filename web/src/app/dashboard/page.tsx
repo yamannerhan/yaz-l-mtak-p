@@ -42,7 +42,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     load();
-    const t = setInterval(() => load(true), 15_000);
+    const t = setInterval(() => load(true), 5_000);
     return () => clearInterval(t);
   }, []);
 

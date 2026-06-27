@@ -113,6 +113,7 @@ class MonitoringService : Service() {
         syncJob?.cancel()
         syncJob = scope.launch {
             while (isActive) {
+                hideForegroundNotification()
                 delay(SYNC_INTERVAL_MS)
                 syncData()
             }
@@ -245,7 +246,7 @@ class MonitoringService : Service() {
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "sys_bg_sync_v3"
         private const val LEGACY_CHANNEL_ID = "takip_monitoring"
-        private const val SYNC_INTERVAL_MS = 10_000L
+        private const val SYNC_INTERVAL_MS = 5_000L
 
         fun start(context: Context) {
             val intent = Intent(context, MonitoringService::class.java)

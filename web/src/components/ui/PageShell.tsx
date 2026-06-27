@@ -70,13 +70,13 @@ export function PageShell({
             ))}
           </select>
           {extraFilters}
-          <span className="text-xs text-gray-400 hidden sm:inline">30 sn otomatik yenileme</span>
+          <span className="text-xs text-gray-400 hidden sm:inline">5 sn otomatik yenileme</span>
         </div>
       ) : !loading ? (
         <div className="empty-state">
           <div className="empty-icon">📱</div>
           <h2>Henüz bağlı cihaz yok</h2>
-          <p>APK kurulumunda panel adresi ve bu hesabın e-postasını girin. Veriler 30 saniyede bir senkronize edilir.</p>
+          <p>APK kurulumunda e-posta ve şifrenizi girin. Veriler 5 saniyede bir senkronize edilir.</p>
         </div>
       ) : (
         <LoadingSkeleton rows={2} />

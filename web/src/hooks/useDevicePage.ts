@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api, Device } from '@/lib/api';
 
-const POLL_MS = 30_000;
+const POLL_MS = 5_000;
 
 export function useDevicePage<T>(fetchData: (deviceId: string) => Promise<T[]>) {
   const searchParams = useSearchParams();
