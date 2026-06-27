@@ -300,3 +300,47 @@ body {
 .input-log-text {
   @apply message-card-text font-sans text-[15px];
 }
+
+.social-section {
+  @apply w-full;
+}
+
+.chat-room {
+  @apply card p-0 overflow-hidden flex flex-col min-h-[200px];
+}
+
+.chat-room-header {
+  @apply flex items-center gap-3 p-4 bg-gradient-to-r from-slate-50 to-indigo-50 border-b border-gray-100;
+}
+
+.chat-avatar {
+  @apply w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center font-bold shrink-0;
+}
+
+.chat-count {
+  @apply ml-auto text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full;
+}
+
+.chat-room-body {
+  @apply p-3 space-y-2 max-h-[400px] overflow-y-auto flex-1;
+}
+
+.chat-msg {
+  @apply p-3 rounded-xl bg-slate-50 border border-gray-100;
+}
+
+.call-card {
+  @apply data-card;
+}
+
+@media (max-width: 1023px) {
+  .page-container {
+    @apply px-1;
+  }
+  .toolbar {
+    @apply flex-col items-stretch;
+  }
+  .stats-grid {
+    @apply grid-cols-2;
+  }
+}

@@ -12,6 +12,7 @@ const LABELS: Record<string, string> = {
   'input-logs': 'yazılan metinler',
   media: 'medya',
   'installed-apps': 'uygulama listesi',
+  contacts: 'rehber',
 };
 
 export function DataActions({

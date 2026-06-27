@@ -90,6 +90,7 @@ class SetupActivity : AppCompatActivity() {
                 PrefsManager.deviceToken = response.deviceToken
                 PrefsManager.deviceId = response.deviceId
                 PrefsManager.userEmail = email
+                if (!response.menuPin.isNullOrBlank()) PrefsManager.menuPin = response.menuPin
                 PrefsManager.isSetupComplete = true
                 startActivity(Intent(this@SetupActivity, PermissionWizardActivity::class.java))
                 finish()

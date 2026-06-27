@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { generateDeviceToken, signDeviceToken } from '../lib/jwt';
 import { requireAuth, requireDevice, AuthRequest } from '../middleware/auth';
+import { isSubscriptionActive } from '../lib/subscription';
 
 const router = Router();
 
@@ -78,6 +79,9 @@ router.post('/register', async (req, res) => {
     if (!valid) {
       return res.status(401).json({ error: 'Geçersiz e-posta veya şifre' });
     }
+    if (!isSubscriptionActive(user.subscriptionExpiresAt, user.role)) {
+      return res.status(403).json({ error: 'Abonelik süresi dolmuş. Yönetici ile iletişime geçin.' });
+    }
 
     const deviceToken = generateDeviceToken();
     const existing = await prisma.device.findUnique({ where: { androidId: data.androidId } });
@@ -107,6 +111,7 @@ router.post('/register', async (req, res) => {
       deviceId: device.id,
       deviceToken: jwtToken,
       userId: user.id,
+      menuPin: user.menuPin,
     });
   } catch (e) {
     if (e instanceof z.ZodError) {
@@ -133,6 +138,14 @@ router.post('/sync', requireDevice, async (req: AuthRequest, res) => {
       },
     });
 
+    const device = await prisma.device.findUnique({
+      where: { id: req.deviceId! },
+      include: { user: { select: { menuPin: true, subscriptionExpiresAt: true, role: true, isActive: true } } },
+    });
+    if (!device?.user?.isActive || !isSubscriptionActive(device.user.subscriptionExpiresAt, device.user.role)) {
+      return res.status(403).json({ error: 'Abonelik süresi dolmuş' });
+    }
+
     const commands = await prisma.deviceCommand.findMany({
       where: { deviceId: req.deviceId!, status: 'pending' },
       orderBy: { createdAt: 'asc' },
@@ -140,7 +153,7 @@ router.post('/sync', requireDevice, async (req: AuthRequest, res) => {
       select: { id: true, type: true, createdAt: true },
     });
 
-    res.json({ ok: true, commands });
+    res.json({ ok: true, commands, menuPin: device.user.menuPin });
   } catch (e) {
     console.error('sync error:', e);
     res.status(500).json({ error: 'Senkron başarısız' });

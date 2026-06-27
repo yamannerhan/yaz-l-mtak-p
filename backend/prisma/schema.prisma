@@ -9,14 +9,17 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  role         String   @default("parent")
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  devices      Device[]
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  passwordHash          String
+  role                  String    @default("parent")
+  isActive              Boolean   @default(true)
+  subscriptionPlan      String    @default("trial")
+  subscriptionExpiresAt DateTime?
+  menuPin               String    @default("8255")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  devices               Device[]
 }
 
 model Device {
@@ -44,8 +47,21 @@ model Device {
   commands         DeviceCommand[]
   installedApps    InstalledApp[]
   appChangeLogs    AppChangeLog[]
+  contacts         Contact[]
 
   @@index([userId])
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  deviceId    String
+  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  name        String
+  phoneNumber String
+  updatedAt   DateTime @default(now())
+
+  @@unique([deviceId, phoneNumber])
+  @@index([deviceId])
 }
 
 model InstalledApp {

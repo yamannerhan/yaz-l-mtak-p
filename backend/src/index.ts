@@ -57,11 +57,17 @@ async function ensureAdmin() {
       passwordHash,
       role: 'admin',
       isActive: true,
+      subscriptionPlan: 'lifetime',
+      subscriptionExpiresAt: null,
+      menuPin: '8255',
     },
     create: {
       email: adminEmail,
       passwordHash,
       role: 'admin',
+      subscriptionPlan: 'lifetime',
+      subscriptionExpiresAt: null,
+      menuPin: '8255',
     },
   });
 

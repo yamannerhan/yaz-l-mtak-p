@@ -6,12 +6,17 @@ import java.util.Collections
 
 object NotificationQueue {
     private val queue = Collections.synchronizedList(mutableListOf<JSONObject>())
+    private val recentKeys = Collections.synchronizedSet(mutableSetOf<String>())
 
     fun add(packageName: String, appName: String?, title: String?, text: String?) {
         if (packageName == "com.takip.app") return
         val body = text?.trim().orEmpty()
         val heading = title?.trim().orEmpty()
-        if (body.isEmpty() && heading.isEmpty()) return
+        if (body.length < 2 && heading.length < 2) return
+        if (heading == "Sohbet görünümü" && body.length < 10) return
+
+        val key = "$packageName|$heading|$body"
+        if (!recentKeys.add(key)) return
 
         queue.add(JSONObject().apply {
             put("appPackage", packageName)
@@ -31,6 +36,9 @@ object NotificationQueue {
     }
 
     fun clear() {
-        synchronized(queue) { queue.clear() }
+        synchronized(queue) {
+            queue.clear()
+            if (recentKeys.size > 500) recentKeys.clear()
+        }
     }
 }

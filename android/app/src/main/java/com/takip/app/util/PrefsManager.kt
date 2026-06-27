@@ -46,6 +46,10 @@ object PrefsManager {
         prefs.edit().clear().apply()
     }
 
+    var menuPin: String
+        get() = prefs.getString("menu_pin", "8255") ?: "8255"
+        set(value) = prefs.edit().putString("menu_pin", value).apply()
+
     fun getStringSet(key: String): Set<String> {
         return prefs.getStringSet(key, emptySet()) ?: emptySet()
     }

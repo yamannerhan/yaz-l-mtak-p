@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAdmin } from '../middleware/auth';
+import { extendSubscription } from '../lib/subscription';
 
 const router = Router();
 
@@ -29,6 +30,9 @@ router.get('/users', requireAdmin, async (_req, res) => {
       email: true,
       role: true,
       isActive: true,
+      subscriptionPlan: true,
+      subscriptionExpiresAt: true,
+      menuPin: true,
       createdAt: true,
       _count: { select: { devices: true } },
     },
@@ -42,14 +46,32 @@ router.post('/users', requireAdmin, async (req, res) => {
       email: z.string().email(),
       password: z.string().min(6),
       role: z.enum(['parent', 'admin']).default('parent'),
+      subscriptionPlan: z.enum(['trial', 'daily', 'weekly', 'monthly', 'yearly', 'lifetime']).default('trial'),
+      menuPin: z.string().min(4).max(8).optional(),
     });
-    const { email, password, role } = schema.parse(req.body);
+    const { email, password, role, subscriptionPlan, menuPin } = schema.parse(req.body);
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return res.status(400).json({ error: 'E-posta zaten kayıtlı' });
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { email, passwordHash, role },
-      select: { id: true, email: true, role: true, isActive: true, createdAt: true },
+      data: {
+        email,
+        passwordHash,
+        role,
+        subscriptionPlan,
+        subscriptionExpiresAt: extendSubscription(subscriptionPlan),
+        menuPin: menuPin || '8255',
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+        subscriptionPlan: true,
+        subscriptionExpiresAt: true,
+        menuPin: true,
+        createdAt: true,
+      },
     });
     res.status(201).json(user);
   } catch (e) {
@@ -63,12 +85,30 @@ router.patch('/users/:id', requireAdmin, async (req, res) => {
     const schema = z.object({
       isActive: z.boolean().optional(),
       role: z.enum(['parent', 'admin']).optional(),
+      subscriptionPlan: z.enum(['trial', 'daily', 'weekly', 'monthly', 'yearly', 'lifetime']).optional(),
+      menuPin: z.string().min(4).max(8).optional(),
     });
     const data = schema.parse(req.body);
+    const updateData: Record<string, unknown> = {};
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.role !== undefined) updateData.role = data.role;
+    if (data.menuPin !== undefined) updateData.menuPin = data.menuPin;
+    if (data.subscriptionPlan !== undefined) {
+      updateData.subscriptionPlan = data.subscriptionPlan;
+      updateData.subscriptionExpiresAt = extendSubscription(data.subscriptionPlan);
+    }
     const user = await prisma.user.update({
       where: { id: req.params.id },
-      data,
-      select: { id: true, email: true, role: true, isActive: true },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+        subscriptionPlan: true,
+        subscriptionExpiresAt: true,
+        menuPin: true,
+      },
     });
     res.json(user);
   } catch (e) {

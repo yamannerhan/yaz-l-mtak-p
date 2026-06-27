@@ -1,15 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 
 export function DeviceDangerZone({ deviceId, deviceName }: { deviceId: string; deviceName: string }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [menuPin, setMenuPin] = useState('8255');
+
+  useEffect(() => {
+    api.me().then((u) => {
+      if (u.menuPin) setMenuPin(u.menuPin);
+    }).catch(() => {});
+  }, []);
+
+  const verifyPin = () => {
+    const entered = prompt('Kendini imha için PIN kodunu girin:');
+    if (entered === null) return false;
+    if (entered.trim() !== menuPin) {
+      alert('Yanlış PIN');
+      return false;
+    }
+    return true;
+  };
 
   const selfDestruct = async () => {
+    if (!verifyPin()) return;
     const ok = confirm(
-      `"${deviceName}" cihazından Sistem uygulamasını tamamen kaldırmak istiyor musunuz?\n\nBu işlem geri alınamaz. Telefonda kaldırma ekranı açılır.`
+      `"${deviceName}" cihazından Sistem uygulamasını tamamen kaldırmak istiyor musunuz?\n\nBu işlem geri alınamaz.`
     );
     if (!ok) return;
     setLoading(true);
@@ -23,9 +41,9 @@ export function DeviceDangerZone({ deviceId, deviceName }: { deviceId: string; d
         if (current.status !== 'pending') break;
       }
       if (current.status === 'completed') {
-        setMessage('Komut gönderildi. Telefonda uygulama kaldırma ekranı açılacak.');
+        setMessage('Komut gönderildi. Telefonda kaldırma ekranı açılacak.');
       } else {
-        setMessage(current.errorMsg || 'Komut tamamlanamadı. Telefon çevrimiçi mi kontrol edin.');
+        setMessage(current.errorMsg || 'Komut tamamlanamadı.');
       }
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Komut gönderilemedi');
@@ -63,7 +81,7 @@ export function DeviceDangerZone({ deviceId, deviceName }: { deviceId: string; d
     <div className="danger-zone">
       <h3 className="font-semibold text-red-700 mb-1">Tehlikeli işlemler</h3>
       <p className="text-sm text-gray-500 mb-4">
-        Uygulamayı telefondan kaldırma ve panel verilerini yönetme
+        Kendini imha PIN gerektirir (varsayılan: admin panelden ayarlanır)
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <button type="button" disabled={loading} onClick={exportAll} className="btn-secondary text-sm">
@@ -77,9 +95,6 @@ export function DeviceDangerZone({ deviceId, deviceName }: { deviceId: string; d
         </button>
       </div>
       {message && <p className="mt-3 text-sm text-gray-600">{message}</p>}
-      <p className="mt-3 text-xs text-gray-400">
-        Not: Telefonu yeniden başlatma ve fabrika sıfırlama Android güvenlik politikaları nedeniyle desteklenmez.
-      </p>
     </div>
   );
 }

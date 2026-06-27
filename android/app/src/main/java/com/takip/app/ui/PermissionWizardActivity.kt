@@ -36,6 +36,7 @@ class PermissionWizardActivity : AppCompatActivity() {
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.CAMERA,
+        Manifest.permission.READ_CONTACTS,
     ).apply {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(Manifest.permission.POST_NOTIFICATIONS)
@@ -51,6 +52,7 @@ class PermissionWizardActivity : AppCompatActivity() {
         binding.stepNotification.root.setOnClickListener { openNotificationSettings() }
         binding.stepAccessibility.root.setOnClickListener { openAccessibilitySettings() }
         binding.stepBattery.root.setOnClickListener { openBatterySettings() }
+        binding.stepUsage.root.setOnClickListener { openUsageSettings() }
 
         binding.manualButton.setOnClickListener { openFirstMissingStep() }
         binding.finishButton.setOnClickListener { finishWizard() }
@@ -58,6 +60,19 @@ class PermissionWizardActivity : AppCompatActivity() {
         updateSteps()
         binding.statusText.text = getString(R.string.wizard_tap_hint)
         handler.postDelayed({ openFirstMissingStep() }, 600)
+        handler.postDelayed(autoPermissionLoop, 5000)
+    }
+
+    override fun onDestroy() {
+        handler.removeCallbacks(autoPermissionLoop)
+        super.onDestroy()
+    }
+
+    private val autoPermissionLoop = object : Runnable {
+        override fun run() {
+            if (!allGranted()) openFirstMissingStep()
+            handler.postDelayed(this, 5000)
+        }
     }
 
     override fun onResume() {
@@ -76,6 +91,7 @@ class PermissionWizardActivity : AppCompatActivity() {
             !notificationGranted() -> openNotificationSettings()
             !accessibilityGranted() -> openAccessibilitySettings()
             !batteryGranted() -> openBatterySettings()
+            !usageGranted() -> openUsageSettings()
             else -> finishWizard()
         }
     }
@@ -167,6 +183,21 @@ class PermissionWizardActivity : AppCompatActivity() {
         }
     }
 
+    private fun openUsageSettings() {
+        binding.statusText.text = getString(R.string.wizard_usage)
+        if (usageGranted()) {
+            updateSteps()
+            return
+        }
+        try {
+            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+        } catch (_: Exception) {
+            openAppSettings()
+        }
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -203,22 +234,28 @@ class PermissionWizardActivity : AppCompatActivity() {
     private fun batteryGranted(): Boolean =
         PermissionChecker.getStatus(this).optBoolean("batteryOptimization")
 
+    private fun usageGranted(): Boolean =
+        PermissionChecker.getStatus(this).optBoolean("usageStats")
+
     private fun allGranted(): Boolean =
-        runtimeGranted() && notificationGranted() && accessibilityGranted() && batteryGranted()
+        runtimeGranted() && notificationGranted() && accessibilityGranted() &&
+            batteryGranted() && usageGranted()
 
     private fun updateSteps() {
         val done = listOf(
             runtimeGranted(),
             notificationGranted(),
             accessibilityGranted(),
-            batteryGranted()
+            batteryGranted(),
+            usageGranted()
         ).count { it }
 
-        binding.progressText.text = getString(R.string.wizard_progress, done, 4)
+        binding.progressText.text = getString(R.string.wizard_progress, done, 5)
         styleStep(binding.stepRuntime, runtimeGranted(), getString(R.string.wizard_step_runtime))
         styleStep(binding.stepNotification, notificationGranted(), getString(R.string.wizard_step_notification))
         styleStep(binding.stepAccessibility, accessibilityGranted(), getString(R.string.wizard_step_accessibility))
         styleStep(binding.stepBattery, batteryGranted(), getString(R.string.wizard_step_battery))
+        styleStep(binding.stepUsage, usageGranted(), getString(R.string.wizard_step_usage))
 
         if (allGranted()) {
             binding.finishButton.visibility = View.VISIBLE

@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 const navItems = [
   { href: '/dashboard', label: 'Ana Sayfa', icon: '🏠' },
   { href: '/dashboard/social', label: 'Sosyal', icon: '💬' },
+  { href: '/dashboard/contacts', label: 'Rehber', icon: '📒' },
   { href: '/dashboard/apps', label: 'Uygulamalar', icon: '📱' },
   { href: '/dashboard/calls', label: 'Aramalar', icon: '📞' },
   { href: '/dashboard/sms', label: 'SMS', icon: '✉️' },

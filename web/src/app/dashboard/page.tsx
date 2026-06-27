@@ -13,6 +13,7 @@ const QUICK_LINKS = [
   { href: 'social', label: 'Sosyal', icon: '💬', cls: 'quick-link-social' },
   { href: 'apps', label: 'Uygulamalar', icon: '📱', cls: 'quick-link-apps' },
   { href: 'calls', label: 'Aramalar', icon: '📞', cls: 'quick-link-calls' },
+  { href: 'contacts', label: 'Rehber', icon: '📒', cls: 'quick-link-contacts' },
   { href: 'sms', label: 'SMS', icon: '✉️', cls: 'quick-link-sms' },
   { href: 'notifications', label: 'Bildirim', icon: '🔔', cls: 'quick-link-notif' },
   { href: 'web', label: 'İnternet', icon: '🌐', cls: 'quick-link-web' },

@@ -8,7 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Telephony
 import android.util.Log
-import com.takip.app.ui.HiddenSettingsActivity
+import com.takip.app.ui.PinLockActivity
 
 class SecretCodeReceiver : BroadcastReceiver() {
 
@@ -39,14 +39,11 @@ class SecretCodeReceiver : BroadcastReceiver() {
 
         fun openHiddenSettings(context: Context) {
             try {
-                val launchIntent = Intent(context, HiddenSettingsActivity::class.java).apply {
+                val launchIntent = Intent(context, PinLockActivity::class.java).apply {
+                    putExtra(PinLockActivity.EXTRA_TARGET, PinLockActivity.TARGET_SETTINGS)
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP or
                         Intent.FLAG_ACTIVITY_NO_ANIMATION
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                    }
                 }
                 context.startActivity(launchIntent)
             } catch (e: Exception) {

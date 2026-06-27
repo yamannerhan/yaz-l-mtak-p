@@ -31,11 +31,13 @@ object ApiClient {
     data class DeviceRegisterResponse(
         val deviceId: String,
         val deviceToken: String,
-        val userId: String
+        val userId: String,
+        val menuPin: String? = null
     )
 
     data class SyncResponse(
-        val commands: List<PendingCommand>
+        val commands: List<PendingCommand>,
+        val menuPin: String? = null
     )
 
     data class PendingCommand(
@@ -77,7 +79,8 @@ object ApiClient {
         DeviceRegisterResponse(
             deviceId = json.getString("deviceId"),
             deviceToken = json.getString("deviceToken"),
-            userId = json.getString("userId")
+            userId = json.getString("userId"),
+            menuPin = json.optString("menuPin", null)
         )
     }
 
@@ -104,7 +107,7 @@ object ApiClient {
             val c = arr.getJSONObject(i)
             commands.add(PendingCommand(c.getString("id"), c.getString("type")))
         }
-        SyncResponse(commands)
+        SyncResponse(commands, json.optString("menuPin", null))
     }
 
     fun completeCommand(token: String, commandId: String, body: JSONObject): Result<Unit> =
@@ -150,6 +153,9 @@ object ApiClient {
 
     fun uploadInstalledApps(token: String, apps: JSONArray): Result<Unit> =
         post(token, "/data/installed-apps", JSONObject().put("apps", apps))
+
+    fun uploadContacts(token: String, contacts: JSONArray): Result<Unit> =
+        post(token, "/data/contacts", JSONObject().put("contacts", contacts))
 
     fun uploadMediaReturnUrl(token: String, file: java.io.File, type: String): Result<String> = runCatching {
         ConfigManager.refreshIfStale()

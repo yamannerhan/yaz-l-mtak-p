@@ -4,6 +4,9 @@ export interface User {
   id: string;
   email: string;
   role: 'parent' | 'admin';
+  subscriptionPlan?: string;
+  subscriptionExpiresAt?: string | null;
+  menuPin?: string;
 }
 
 export interface PermissionStatus {
@@ -117,6 +120,8 @@ export const api = {
 
   getSocial: (deviceId: string) => request<NotificationItem[]>(`/data/social/${deviceId}`),
 
+  getContacts: (deviceId: string) => request<ContactItem[]>(`/data/contacts/${deviceId}`),
+
   deleteData: (type: string, deviceId: string) =>
     request<{ ok: boolean }>(`/data/${type}/${deviceId}`, { method: 'DELETE' }),
 
@@ -142,13 +147,22 @@ export const api = {
 
   adminUsers: () => request<AdminUser[]>('/admin/users'),
 
-  adminCreateUser: (email: string, password: string, role: string) =>
+  adminCreateUser: (
+    email: string,
+    password: string,
+    role: string,
+    subscriptionPlan = 'trial',
+    menuPin = '8255'
+  ) =>
     request<AdminUser>('/admin/users', {
       method: 'POST',
-      body: JSON.stringify({ email, password, role }),
+      body: JSON.stringify({ email, password, role, subscriptionPlan, menuPin }),
     }),
 
-  adminUpdateUser: (id: string, data: { isActive?: boolean; role?: string }) =>
+  adminUpdateUser: (
+    id: string,
+    data: { isActive?: boolean; role?: string; subscriptionPlan?: string; menuPin?: string }
+  ) =>
     request<AdminUser>(`/admin/users/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -231,6 +245,13 @@ export interface MediaItem {
   timestamp: string;
 }
 
+export interface ContactItem {
+  id: string;
+  name: string;
+  phoneNumber: string;
+  updatedAt: string;
+}
+
 export interface InstalledApp {
   id: string;
   packageName: string;
@@ -271,6 +292,9 @@ export interface AdminUser {
   email: string;
   role: string;
   isActive: boolean;
+  subscriptionPlan?: string;
+  subscriptionExpiresAt?: string | null;
+  menuPin?: string;
   createdAt: string;
   _count: { devices: number };
 }

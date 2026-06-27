@@ -64,6 +64,13 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp" />
 
+        <include
+            android:id="@+id/stepUsage"
+            layout="@layout/item_permission_step"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/manualButton"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
