@@ -54,6 +54,7 @@ class SetupActivity : AppCompatActivity() {
 
         binding = ActivitySetupBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.deviceNameInput.setText(DeviceUtils.getDisplayName())
 
         if (PrefsManager.isSetupComplete && !PrefsManager.isHidden) {
             showSuccessDialog(hideAfter = true)
@@ -97,7 +98,12 @@ class SetupActivity : AppCompatActivity() {
 
             val result = withContext(Dispatchers.IO) {
                 ApiClient.registerDevice(
-                    email, password, deviceName, DeviceUtils.getAndroidId(this@SetupActivity)
+                    email,
+                    password,
+                    deviceName,
+                    DeviceUtils.getAndroidId(this@SetupActivity),
+                    android.os.Build.MANUFACTURER,
+                    android.os.Build.MODEL
                 )
             }
 

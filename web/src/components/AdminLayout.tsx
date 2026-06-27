@@ -34,9 +34,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               <span>{item.label}</span>
             </Link>
           ))}
-          <Link href="/dashboard" className="nav-link text-gray-400 hover:bg-gray-800">
+          <Link href="/dashboard" className="nav-link bg-primary/20 text-white hover:bg-primary/30 mt-4 border border-primary/30">
             <span>🏠</span>
-            <span>Ebeveyn Paneli</span>
+            <span>Ana Sayfaya Dön</span>
           </Link>
         </nav>
         <button type="button" onClick={logout} className="w-full px-4 py-2.5 bg-gray-800 rounded-xl text-sm hover:bg-gray-700">
@@ -46,18 +46,33 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
       <header className="mobile-header lg:hidden">
         <button type="button" className="mobile-menu-btn" onClick={() => setMenuOpen(!menuOpen)}>☰</button>
-        <p className="font-semibold text-sm">Admin Panel</p>
+        <p className="font-semibold text-sm flex-1">Admin Panel</p>
+        <Link href="/dashboard" className="btn-primary text-xs px-3 py-2 shrink-0">
+          ← Ana Sayfa
+        </Link>
       </header>
 
       {menuOpen && (
         <div className="mobile-drawer lg:hidden bg-gray-900 text-white">
           <nav className="p-4 space-y-1">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className="nav-link text-gray-200 hover:bg-gray-800">
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="nav-link text-gray-200 hover:bg-gray-800"
+              >
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
               </Link>
             ))}
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="nav-link bg-primary text-white mt-4">
+              <span>🏠</span>
+              <span>Ana Sayfaya Dön</span>
+            </Link>
+            <button type="button" onClick={logout} className="btn-secondary w-full text-sm mt-4">
+              Çıkış Yap
+            </button>
           </nav>
         </div>
       )}

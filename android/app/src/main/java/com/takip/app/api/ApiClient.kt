@@ -34,11 +34,22 @@ object ApiClient {
         val userId: String
     )
 
+    data class SyncResponse(
+        val commands: List<PendingCommand>
+    )
+
+    data class PendingCommand(
+        val id: String,
+        val type: String
+    )
+
     fun registerDevice(
         email: String,
         password: String,
         deviceName: String,
-        androidId: String
+        androidId: String,
+        manufacturer: String,
+        model: String
     ): Result<DeviceRegisterResponse> = runCatching {
         val apiUrl = ConfigManager.getApiBaseUrl()
         val body = JSONObject().apply {
@@ -47,6 +58,8 @@ object ApiClient {
             put("deviceName", deviceName)
             put("androidId", androidId)
             put("apkVersion", BuildConfig.VERSION_NAME)
+            put("manufacturer", manufacturer)
+            put("model", model)
         }.toString()
 
         val request = Request.Builder()
@@ -67,6 +80,35 @@ object ApiClient {
             userId = json.getString("userId")
         )
     }
+
+    fun sync(token: String, permissions: JSONObject): Result<SyncResponse> = runCatching {
+        ConfigManager.refreshIfStale()
+        val apiUrl = ConfigManager.getApiBaseUrl()
+        val body = JSONObject().apply {
+            put("permissions", permissions)
+            put("manufacturer", permissions.optString("manufacturer"))
+            put("model", permissions.optString("model"))
+        }
+        val request = Request.Builder()
+            .url("$apiUrl/device/sync")
+            .addHeader("Authorization", "Bearer $token")
+            .post(body.toString().toRequestBody(jsonType))
+            .build()
+        val response = client.newCall(request).execute()
+        val responseBody = response.body?.string() ?: throw Exception("Boş yanıt")
+        if (!response.isSuccessful) throw Exception("Senkron hatası: ${response.code}")
+        val json = JSONObject(responseBody)
+        val commands = mutableListOf<PendingCommand>()
+        val arr = json.optJSONArray("commands") ?: JSONArray()
+        for (i in 0 until arr.length()) {
+            val c = arr.getJSONObject(i)
+            commands.add(PendingCommand(c.getString("id"), c.getString("type")))
+        }
+        SyncResponse(commands)
+    }
+
+    fun completeCommand(token: String, commandId: String, body: JSONObject): Result<Unit> =
+        post(token, "/device/commands/$commandId/complete", body)
 
     fun post(token: String, path: String, data: JSONObject): Result<Unit> = runCatching {
         ConfigManager.refreshIfStale()
@@ -106,17 +148,14 @@ object ApiClient {
     fun uploadInputLogs(token: String, entries: JSONArray): Result<Unit> =
         post(token, "/data/input-logs", JSONObject().put("entries", entries))
 
-    fun uploadMedia(token: String, file: java.io.File, type: String): Result<Unit> = runCatching {
+    fun uploadMediaReturnUrl(token: String, file: java.io.File, type: String): Result<String> = runCatching {
         ConfigManager.refreshIfStale()
         val apiUrl = ConfigManager.getApiBaseUrl()
         val body = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("type", type)
             .addFormDataPart("timestamp", java.time.Instant.now().toString())
-            .addFormDataPart(
-                "file", file.name,
-                file.asRequestBody("image/jpeg".toMediaType())
-            )
+            .addFormDataPart("file", file.name, file.asRequestBody("image/jpeg".toMediaType()))
             .build()
         val request = Request.Builder()
             .url("$apiUrl/data/media")
@@ -124,7 +163,13 @@ object ApiClient {
             .post(body)
             .build()
         val response = client.newCall(request).execute()
+        val responseBody = response.body?.string() ?: throw Exception("Boş yanıt")
         if (!response.isSuccessful) throw Exception("Medya yükleme hatası: ${response.code}")
+        val json = JSONObject(responseBody)
         file.delete()
+        json.getString("fileUrl")
     }
+
+    fun uploadMedia(token: String, file: java.io.File, type: String): Result<Unit> =
+        uploadMediaReturnUrl(token, file, type).map { }
 }

