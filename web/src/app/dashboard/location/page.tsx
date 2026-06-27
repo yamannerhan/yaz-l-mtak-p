@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import { api, LocationItem, formatDate } from '@/lib/api';
 import { useDevicePage } from '@/hooks/useDevicePage';
+import { DataActions } from '@/components/DataActions';
 import { PageShell } from '@/components/ui/PageShell';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
@@ -16,6 +17,9 @@ function LocationContent() {
       emptyTitle="Konum kaydı yok"
       emptyHint="Konum izni verilmiş olmalı. Pil optimizasyonu kapalı olmalı."
       isEmpty={page.data.length === 0}
+      extraFilters={
+        <DataActions deviceId={page.selectedDevice} dataType="locations" onChanged={page.onRefresh} />
+      }
       {...page}
     >
       <div className="space-y-3">

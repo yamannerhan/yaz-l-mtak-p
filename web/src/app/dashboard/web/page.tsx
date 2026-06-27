@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import { api, WebHistoryItem, formatDate } from '@/lib/api';
 import { useDevicePage } from '@/hooks/useDevicePage';
+import { DataActions } from '@/components/DataActions';
 import { PageShell } from '@/components/ui/PageShell';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
@@ -16,6 +17,9 @@ function WebContent() {
       emptyTitle="İnternet kaydı yok"
       emptyHint="Telefonda Ayarlar → Erişilebilirlik → Aile Takip servisini AÇIN. Chrome'da gezinince kayıtlar gelir."
       isEmpty={page.data.length === 0}
+      extraFilters={
+        <DataActions deviceId={page.selectedDevice} dataType="web-history" onChanged={page.onRefresh} />
+      }
       {...page}
     >
       <div className="space-y-2">

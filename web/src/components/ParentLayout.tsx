@@ -7,8 +7,10 @@ import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { href: '/dashboard', label: 'Ana Sayfa', icon: '🏠' },
+  { href: '/dashboard/social', label: 'Sosyal', icon: '💬' },
+  { href: '/dashboard/apps', label: 'Uygulamalar', icon: '📱' },
   { href: '/dashboard/calls', label: 'Aramalar', icon: '📞' },
-  { href: '/dashboard/sms', label: 'SMS', icon: '💬' },
+  { href: '/dashboard/sms', label: 'SMS', icon: '✉️' },
   { href: '/dashboard/notifications', label: 'Bildirimler', icon: '🔔' },
   { href: '/dashboard/web', label: 'İnternet', icon: '🌐' },
   { href: '/dashboard/inputs', label: 'Yazılanlar', icon: '⌨️' },
@@ -40,7 +42,7 @@ export function ParentLayout({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="sidebar-desktop">
         <div className="sidebar-brand">
-          <h1>Aile Takip</h1>
+          <h1>Sistem Panel</h1>
           <p>{user?.email}</p>
         </div>
         <nav className="sidebar-nav">
@@ -65,7 +67,7 @@ export function ParentLayout({ children }: { children: React.ReactNode }) {
           ☰
         </button>
         <div className="min-w-0">
-          <p className="font-semibold text-sm truncate">Aile Takip</p>
+          <p className="font-semibold text-sm truncate">Sistem Panel</p>
           <p className="text-xs text-gray-500 truncate">{user?.email}</p>
         </div>
       </header>

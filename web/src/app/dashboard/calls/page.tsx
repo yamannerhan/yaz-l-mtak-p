@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import { api, CallLog, formatDate } from '@/lib/api';
 import { useDevicePage } from '@/hooks/useDevicePage';
+import { DataActions } from '@/components/DataActions';
 import { PageShell } from '@/components/ui/PageShell';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 
@@ -23,6 +24,9 @@ function CallsContent() {
       emptyHint="Telefonda arama kaydı izni verilmiş olmalı. Veriler 30 saniyede bir yüklenir."
       isEmpty={page.data.length === 0}
       skeleton={<TableSkeleton />}
+      extraFilters={
+        <DataActions deviceId={page.selectedDevice} dataType="calls" onChanged={page.onRefresh} />
+      }
       {...page}
     >
       <div className="data-table-wrap">

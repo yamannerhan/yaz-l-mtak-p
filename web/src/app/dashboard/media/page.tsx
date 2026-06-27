@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useState } from 'react';
 import { api, MediaItem, formatDate, mediaFullUrl } from '@/lib/api';
 import { useDevicePage } from '@/hooks/useDevicePage';
+import { DataActions } from '@/components/DataActions';
 import { PageShell } from '@/components/ui/PageShell';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
@@ -28,12 +29,15 @@ function MediaContent() {
       emptyHint="Erişilebilirlik ve kamera izni gerekli."
       isEmpty={page.data.length === 0}
       extraFilters={
-        <select className="input max-w-xs" value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="">Tümü</option>
-          <option value="screenshot">Ekran</option>
-          <option value="camera_front">Ön Kamera</option>
-          <option value="camera_back">Arka Kamera</option>
-        </select>
+        <>
+          <select className="input max-w-xs" value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="">Tümü</option>
+            <option value="screenshot">Ekran</option>
+            <option value="camera_front">Ön Kamera</option>
+            <option value="camera_back">Arka Kamera</option>
+          </select>
+          <DataActions deviceId={page.selectedDevice} dataType="media" onChanged={page.onRefresh} />
+        </>
       }
       {...page}
     >

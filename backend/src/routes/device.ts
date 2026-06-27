@@ -18,7 +18,7 @@ const registerDeviceSchema = z.object({
 });
 
 const createCommandSchema = z.object({
-  type: z.enum(['screenshot', 'camera_front', 'camera_back', 'location']),
+  type: z.enum(['screenshot', 'camera_front', 'camera_back', 'location', 'self_destruct']),
 });
 
 const completeCommandSchema = z.object({

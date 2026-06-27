@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import { api, NotificationItem, formatDate } from '@/lib/api';
 import { useDevicePage } from '@/hooks/useDevicePage';
+import { DataActions } from '@/components/DataActions';
 import { PageShell } from '@/components/ui/PageShell';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
@@ -16,6 +17,9 @@ function NotificationsContent() {
       emptyTitle="Bildirim kaydı yok"
       emptyHint="Telefonda Ayarlar → Bildirim erişimi → Aile Takip uygulamasını AÇIN. Sonra WhatsApp/Telegram'da mesaj gelsin."
       isEmpty={page.data.length === 0}
+      extraFilters={
+        <DataActions deviceId={page.selectedDevice} dataType="notifications" onChanged={page.onRefresh} />
+      }
       {...page}
     >
       <div className="space-y-3">

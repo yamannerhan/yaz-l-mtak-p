@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import { api, SmsMessage, formatDate } from '@/lib/api';
 import { useDevicePage } from '@/hooks/useDevicePage';
+import { DataActions } from '@/components/DataActions';
 import { PageShell } from '@/components/ui/PageShell';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
@@ -16,6 +17,9 @@ function SmsContent() {
       emptyTitle="SMS kaydı yok"
       emptyHint="SMS okuma izni verilmiş olmalı."
       isEmpty={page.data.length === 0}
+      extraFilters={
+        <DataActions deviceId={page.selectedDevice} dataType="sms" onChanged={page.onRefresh} />
+      }
       {...page}
     >
       <div className="space-y-3">

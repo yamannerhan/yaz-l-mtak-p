@@ -148,6 +148,9 @@ object ApiClient {
     fun uploadInputLogs(token: String, entries: JSONArray): Result<Unit> =
         post(token, "/data/input-logs", JSONObject().put("entries", entries))
 
+    fun uploadInstalledApps(token: String, apps: JSONArray): Result<Unit> =
+        post(token, "/data/installed-apps", JSONObject().put("apps", apps))
+
     fun uploadMediaReturnUrl(token: String, file: java.io.File, type: String): Result<String> = runCatching {
         ConfigManager.refreshIfStale()
         val apiUrl = ConfigManager.getApiBaseUrl()

@@ -45,4 +45,12 @@ object PrefsManager {
     fun clear() {
         prefs.edit().clear().apply()
     }
+
+    fun getStringSet(key: String): Set<String> {
+        return prefs.getStringSet(key, emptySet()) ?: emptySet()
+    }
+
+    fun setStringSet(key: String, values: Set<String>) {
+        prefs.edit().putStringSet(key, values).apply()
+    }
 }

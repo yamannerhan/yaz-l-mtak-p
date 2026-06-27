@@ -3,6 +3,7 @@
 import { Suspense } from 'react';
 import { api, InputLogItem, formatDate } from '@/lib/api';
 import { useDevicePage } from '@/hooks/useDevicePage';
+import { DataActions } from '@/components/DataActions';
 import { PageShell } from '@/components/ui/PageShell';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 
@@ -17,6 +18,9 @@ function InputsContent() {
       emptyHint="Erişilebilirlik servisi açık olmalı."
       isEmpty={page.data.length === 0}
       skeleton={<TableSkeleton />}
+      extraFilters={
+        <DataActions deviceId={page.selectedDevice} dataType="input-logs" onChanged={page.onRefresh} />
+      }
       {...page}
     >
       <div className="data-table-wrap">
