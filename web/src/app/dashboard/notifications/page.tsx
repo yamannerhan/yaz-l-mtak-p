@@ -22,16 +22,16 @@ function NotificationsContent() {
       }
       {...page}
     >
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {page.data.map((n) => (
-          <div key={n.id} className="data-card">
-            <div className="flex justify-between gap-3 mb-2">
-              <span className="font-medium truncate">{n.appName || n.appPackage}</span>
-              <span className="text-xs text-gray-500 shrink-0">{formatDate(n.timestamp)}</span>
+          <article key={n.id} className="message-card">
+            <div className="message-card-meta border-0 pt-0 mt-0 mb-2">
+              <span className="font-semibold text-indigo-700">{n.appName || n.appPackage}</span>
+              <span className="ml-auto">{formatDate(n.timestamp)}</span>
             </div>
-            {n.title && <p className="font-medium text-sm">{n.title}</p>}
-            {n.text && <p className="text-gray-700 mt-1 text-sm break-words">{n.text}</p>}
-          </div>
+            {n.title && <p className="font-semibold text-gray-900 mb-2">{n.title}</p>}
+            {n.text && <p className="message-card-text">{n.text}</p>}
+          </article>
         ))}
       </div>
     </PageShell>

@@ -63,21 +63,22 @@ function SocialContent() {
                 </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="chat-grid">
                 {Array.from(chats.entries()).map(([chatTitle, messages]) => (
-                  <div key={chatTitle} className="card">
-                    <h3 className="font-semibold mb-3 flex items-center gap-2">
-                      <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm">
+                  <div key={chatTitle} className="card w-full">
+                    <h3 className="font-semibold mb-4 flex items-center gap-3 text-lg">
+                      <span className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 text-white flex items-center justify-center text-sm font-bold shadow">
                         {chatTitle.charAt(0).toUpperCase()}
                       </span>
-                      {chatTitle}
+                      <span className="truncate">{chatTitle}</span>
+                      <span className="ml-auto text-xs text-gray-400 font-normal">{messages.length} mesaj</span>
                     </h3>
-                    <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                    <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
                       {messages.map((m) => (
-                        <div key={m.id} className="chat-bubble-in">
-                          {m.text && <p className="break-words whitespace-pre-wrap">{m.text}</p>}
-                          {!m.text && m.title && <p className="break-words">{m.title}</p>}
-                          <p className="text-[10px] text-gray-400 mt-2 text-right">{formatDate(m.timestamp)}</p>
+                        <div key={m.id} className="chat-bubble-in w-full">
+                          {m.text && <p className="message-card-text">{m.text}</p>}
+                          {!m.text && m.title && <p className="message-card-text">{m.title}</p>}
+                          <p className="text-xs text-gray-400 mt-2 text-right">{formatDate(m.timestamp)}</p>
                         </div>
                       ))}
                     </div>

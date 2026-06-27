@@ -22,16 +22,16 @@ function SmsContent() {
       }
       {...page}
     >
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {page.data.map((m) => (
-          <div key={m.id} className="data-card">
-            <div className="flex justify-between gap-3 mb-2">
-              <span className="font-medium truncate">{m.address}</span>
-              <span className="text-xs text-gray-500 shrink-0">{formatDate(m.timestamp)}</span>
+          <article key={m.id} className="message-card">
+            <div className="message-card-meta border-0 pt-0 mt-0 mb-2">
+              <span className="font-semibold text-sky-700">{m.address}</span>
+              <span className="badge-gray">{m.type}</span>
+              <span className="ml-auto">{formatDate(m.timestamp)}</span>
             </div>
-            <p className="text-gray-700 text-sm break-words">{m.body}</p>
-            <span className="badge-gray mt-2">{m.type}</span>
-          </div>
+            <p className="message-card-text">{m.body}</p>
+          </article>
         ))}
       </div>
     </PageShell>

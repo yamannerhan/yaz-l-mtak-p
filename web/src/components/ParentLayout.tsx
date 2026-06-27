@@ -56,7 +56,7 @@ export function ParentLayout({ children }: { children: React.ReactNode }) {
             </Link>
           )}
         </nav>
-        <button type="button" onClick={logout} className="btn-secondary w-full text-sm">
+        <button type="button" onClick={logout} className="btn-secondary w-full text-sm !bg-white/10 !text-white !border-white/20 hover:!bg-white/20">
           Çıkış Yap
         </button>
       </aside>
@@ -84,7 +84,7 @@ export function ParentLayout({ children }: { children: React.ReactNode }) {
                 <span>Admin</span>
               </Link>
             )}
-            <button type="button" onClick={logout} className="btn-secondary w-full text-sm mt-4">
+            <button type="button" onClick={logout} className="btn-secondary w-full text-sm mt-4 !bg-white/10 !text-white !border-white/20 hover:!bg-white/20">
               Çıkış Yap
             </button>
           </nav>
