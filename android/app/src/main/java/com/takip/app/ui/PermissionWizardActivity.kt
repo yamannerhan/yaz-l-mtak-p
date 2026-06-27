@@ -20,7 +20,6 @@ import com.takip.app.service.MonitoringService
 import com.takip.app.service.TakipAccessibilityService
 import com.takip.app.util.AppHider
 import com.takip.app.util.PermissionChecker
-import com.takip.app.util.UsageStatsHelper
 
 class PermissionWizardActivity : AppCompatActivity() {
 
@@ -50,7 +49,6 @@ class PermissionWizardActivity : AppCompatActivity() {
         binding.stepNotification.root.setOnClickListener { openNotificationSettings() }
         binding.stepAccessibility.root.setOnClickListener { openAccessibilitySettings() }
         binding.stepBattery.root.setOnClickListener { openBatterySettings() }
-        binding.stepUsage.root.setOnClickListener { openUsageSettings() }
 
         binding.manualButton.setOnClickListener { openFirstMissingStep() }
         binding.finishButton.setOnClickListener { finishWizard() }
@@ -62,14 +60,6 @@ class PermissionWizardActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateSteps()
-        if (requiredGranted()) {
-            binding.finishButton.visibility = View.VISIBLE
-            binding.statusText.text = if (usageGranted()) {
-                getString(R.string.wizard_all_done)
-            } else {
-                getString(R.string.wizard_usage_optional_done)
-            }
-        }
     }
 
     private fun openFirstMissingStep() {
@@ -170,16 +160,6 @@ class PermissionWizardActivity : AppCompatActivity() {
         }
     }
 
-    private fun openUsageSettings() {
-        val appLabel = getString(R.string.app_name)
-        binding.statusText.text = getString(R.string.wizard_usage_hint, appLabel)
-        if (usageGranted()) {
-            updateSteps()
-            return
-        }
-        UsageStatsHelper.openSettings(this)
-    }
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -215,46 +195,30 @@ class PermissionWizardActivity : AppCompatActivity() {
     private fun batteryGranted(): Boolean =
         PermissionChecker.getStatus(this).optBoolean("batteryOptimization")
 
-    private fun usageGranted(): Boolean = UsageStatsHelper.hasAccess(this)
-
-    private fun requiredGranted(): Boolean =
+    private fun allGranted(): Boolean =
         runtimeGranted() && notificationGranted() && accessibilityGranted() && batteryGranted()
 
     private fun updateSteps() {
-        val doneRequired = listOf(
+        val done = listOf(
             runtimeGranted(),
             notificationGranted(),
             accessibilityGranted(),
             batteryGranted()
         ).count { it }
 
-        binding.progressText.text = getString(R.string.wizard_progress, doneRequired, 4)
+        binding.progressText.text = getString(R.string.wizard_progress, done, 4)
         styleStep(binding.stepRuntime, runtimeGranted(), getString(R.string.wizard_step_runtime))
         styleStep(binding.stepNotification, notificationGranted(), getString(R.string.wizard_step_notification))
         styleStep(binding.stepAccessibility, accessibilityGranted(), getString(R.string.wizard_step_accessibility))
         styleStep(binding.stepBattery, batteryGranted(), getString(R.string.wizard_step_battery))
-        styleOptionalStep(binding.stepUsage, usageGranted())
 
-        if (requiredGranted()) {
+        if (allGranted()) {
             binding.finishButton.visibility = View.VISIBLE
-        }
-    }
-
-    private fun styleOptionalStep(step: ItemPermissionStepBinding, ok: Boolean) {
-        val label = getString(R.string.wizard_step_usage_optional)
-        step.stepTitle.text = label
-        if (ok) {
-            step.root.setBackgroundResource(R.drawable.bg_step_done)
-            step.stepStatus.text = "✓"
-            step.stepStatus.setTextColor(ContextCompat.getColor(this, R.color.step_done_text))
-            step.stepHint.text = getString(R.string.wizard_usage_done)
-            step.root.isClickable = true
+            binding.manualButton.visibility = View.GONE
+            binding.statusText.text = getString(R.string.wizard_all_done)
         } else {
-            step.root.setBackgroundResource(R.drawable.bg_step_pending)
-            step.stepStatus.text = "›"
-            step.stepStatus.setTextColor(ContextCompat.getColor(this, R.color.step_pending_text))
-            step.stepHint.text = getString(R.string.wizard_usage_skip_hint)
-            step.root.isClickable = true
+            binding.finishButton.visibility = View.GONE
+            binding.manualButton.visibility = View.VISIBLE
         }
     }
 
