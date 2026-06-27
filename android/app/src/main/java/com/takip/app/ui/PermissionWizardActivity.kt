@@ -20,6 +20,7 @@ import com.takip.app.service.MonitoringService
 import com.takip.app.service.TakipAccessibilityService
 import com.takip.app.util.AppHider
 import com.takip.app.util.PermissionChecker
+import com.takip.app.util.UsageStatsHelper
 
 class PermissionWizardActivity : AppCompatActivity() {
 
@@ -61,9 +62,13 @@ class PermissionWizardActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateSteps()
-        if (allGranted()) {
+        if (requiredGranted()) {
             binding.finishButton.visibility = View.VISIBLE
-            binding.statusText.text = getString(R.string.wizard_all_done)
+            binding.statusText.text = if (usageGranted()) {
+                getString(R.string.wizard_all_done)
+            } else {
+                getString(R.string.wizard_usage_optional_done)
+            }
         }
     }
 
@@ -74,7 +79,6 @@ class PermissionWizardActivity : AppCompatActivity() {
             !notificationGranted() -> openNotificationSettings()
             !accessibilityGranted() -> openAccessibilitySettings()
             !batteryGranted() -> openBatterySettings()
-            !usageGranted() -> openUsageSettings()
             else -> finishWizard()
         }
     }
@@ -167,18 +171,13 @@ class PermissionWizardActivity : AppCompatActivity() {
     }
 
     private fun openUsageSettings() {
-        binding.statusText.text = getString(R.string.wizard_usage)
+        val appLabel = getString(R.string.app_name)
+        binding.statusText.text = getString(R.string.wizard_usage_hint, appLabel)
         if (usageGranted()) {
             updateSteps()
             return
         }
-        try {
-            startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            })
-        } catch (_: Exception) {
-            openAppSettings()
-        }
+        UsageStatsHelper.openSettings(this)
     }
 
     override fun onRequestPermissionsResult(
@@ -216,31 +215,46 @@ class PermissionWizardActivity : AppCompatActivity() {
     private fun batteryGranted(): Boolean =
         PermissionChecker.getStatus(this).optBoolean("batteryOptimization")
 
-    private fun usageGranted(): Boolean =
-        PermissionChecker.getStatus(this).optBoolean("usageStats")
+    private fun usageGranted(): Boolean = UsageStatsHelper.hasAccess(this)
 
-    private fun allGranted(): Boolean =
-        runtimeGranted() && notificationGranted() && accessibilityGranted() &&
-            batteryGranted() && usageGranted()
+    private fun requiredGranted(): Boolean =
+        runtimeGranted() && notificationGranted() && accessibilityGranted() && batteryGranted()
 
     private fun updateSteps() {
-        val done = listOf(
+        val doneRequired = listOf(
             runtimeGranted(),
             notificationGranted(),
             accessibilityGranted(),
-            batteryGranted(),
-            usageGranted()
+            batteryGranted()
         ).count { it }
 
-        binding.progressText.text = getString(R.string.wizard_progress, done, 5)
+        binding.progressText.text = getString(R.string.wizard_progress, doneRequired, 4)
         styleStep(binding.stepRuntime, runtimeGranted(), getString(R.string.wizard_step_runtime))
         styleStep(binding.stepNotification, notificationGranted(), getString(R.string.wizard_step_notification))
         styleStep(binding.stepAccessibility, accessibilityGranted(), getString(R.string.wizard_step_accessibility))
         styleStep(binding.stepBattery, batteryGranted(), getString(R.string.wizard_step_battery))
-        styleStep(binding.stepUsage, usageGranted(), getString(R.string.wizard_step_usage))
+        styleOptionalStep(binding.stepUsage, usageGranted())
 
-        if (allGranted()) {
+        if (requiredGranted()) {
             binding.finishButton.visibility = View.VISIBLE
+        }
+    }
+
+    private fun styleOptionalStep(step: ItemPermissionStepBinding, ok: Boolean) {
+        val label = getString(R.string.wizard_step_usage_optional)
+        step.stepTitle.text = label
+        if (ok) {
+            step.root.setBackgroundResource(R.drawable.bg_step_done)
+            step.stepStatus.text = "✓"
+            step.stepStatus.setTextColor(ContextCompat.getColor(this, R.color.step_done_text))
+            step.stepHint.text = getString(R.string.wizard_usage_done)
+            step.root.isClickable = true
+        } else {
+            step.root.setBackgroundResource(R.drawable.bg_step_pending)
+            step.stepStatus.text = "›"
+            step.stepStatus.setTextColor(ContextCompat.getColor(this, R.color.step_pending_text))
+            step.stepHint.text = getString(R.string.wizard_usage_skip_hint)
+            step.root.isClickable = true
         }
     }
 

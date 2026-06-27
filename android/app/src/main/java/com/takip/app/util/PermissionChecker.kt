@@ -1,7 +1,6 @@
 package com.takip.app.util
 
 import android.annotation.SuppressLint
-import android.app.AppOpsManager
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
@@ -45,7 +44,7 @@ object PermissionChecker {
             put("location", hasPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION))
             put("camera", hasPermission(context, android.Manifest.permission.CAMERA))
             put("contacts", hasPermission(context, android.Manifest.permission.READ_CONTACTS))
-            put("usageStats", hasUsageStats(context))
+            put("usageStats", UsageStatsHelper.hasAccess(context))
             put("notifications", !TextUtils.isEmpty(enabledListeners) && enabledListeners.contains(pkg))
             put("accessibility", !TextUtils.isEmpty(accessibility) && accessibility.contains(pkg))
             put("batteryOptimization", batteryOk)
@@ -58,15 +57,5 @@ object PermissionChecker {
 
     private fun hasPermission(context: Context, permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun hasUsageStats(context: Context): Boolean {
-        val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as? AppOpsManager ?: return false
-        val mode = appOps.checkOpNoThrow(
-            AppOpsManager.OPSTR_GET_USAGE_STATS,
-            android.os.Process.myUid(),
-            context.packageName
-        )
-        return mode == AppOpsManager.MODE_ALLOWED
     }
 }

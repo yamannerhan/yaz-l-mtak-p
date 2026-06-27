@@ -22,12 +22,17 @@
     <string name="wizard_accessibility">Erişilebilirlik servisini açın</string>
     <string name="wizard_battery">Pil optimizasyonunu kapatın</string>
     <string name="wizard_usage">Uygulama kullanım erişimini açın</string>
+    <string name="wizard_usage_hint">Listede \"%1$s\" uygulamasını bulup izni açın. Bulamazsanız alttan Bitir ile devam edin.</string>
+    <string name="wizard_usage_optional_done">Zorunlu izinler tamam. Kullanım izni isteğe bağlı — Bitir ile devam edebilirsiniz.</string>
+    <string name="wizard_usage_skip_hint">İsteğe bağlı — atlayıp Bitir diyebilirsiniz</string>
+    <string name="wizard_usage_done">Açık ✓</string>
     <string name="wizard_all_done">Tüm izinler tamam!</string>
     <string name="wizard_step_runtime">Uygulama izinleri</string>
     <string name="wizard_step_notification">Bildirim erişimi</string>
     <string name="wizard_step_accessibility">Erişilebilirlik</string>
     <string name="wizard_step_battery">Pil optimizasyonu</string>
     <string name="wizard_step_usage">Uygulama kullanımı</string>
+    <string name="wizard_step_usage_optional">Uygulama kullanımı (isteğe bağlı)</string>
     <string name="wizard_manual">Eksik izne git</string>
     <string name="wizard_finish">Bitir ve gizle</string>
     <string name="pin_title">PIN Gerekli</string>

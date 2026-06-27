@@ -11,8 +11,8 @@ android {
         applicationId = "com.takip.app"
         minSdk = 26
         targetSdk = 31
-        versionCode = 12
-        versionName = "1.1.1"
+        versionCode = 13
+        versionName = "1.1.2"
         buildConfigField(
             "String",
             "DEFAULT_PANEL_URL",

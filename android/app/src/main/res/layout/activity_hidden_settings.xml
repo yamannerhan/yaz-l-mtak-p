@@ -64,6 +64,14 @@
             android:layout_height="wrap_content"
             android:text="Pil Optimizasyonu"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/usageButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Uygulama Kullanımı"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_marginBottom="16dp" />
 
         <TextView
