@@ -90,7 +90,7 @@ class PermissionWizardActivity : AppCompatActivity() {
 
         if (!permissionDialogShown) {
             permissionDialogShown = true
-            ActivityCompat.requestPermissions(this, missing.toTypedArray(), REQ_RUNTIME)
+            ActivityCompat.requestPermissions(this, missing, REQ_RUNTIME)
             return
         }
 
