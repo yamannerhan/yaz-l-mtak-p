@@ -87,11 +87,21 @@ router.get('/devices', requireAdmin, async (_req, res) => {
 
 router.patch('/devices/:id', requireAdmin, async (req, res) => {
   try {
-    const schema = z.object({ isActive: z.boolean() });
-    const { isActive } = schema.parse(req.body);
+    const schema = z.object({
+      isActive: z.boolean().optional(),
+      deviceName: z.string().min(1).max(120).optional(),
+    });
+    const data = schema.parse(req.body);
+    if (data.isActive === undefined && data.deviceName === undefined) {
+      return res.status(400).json({ error: 'Güncellenecek alan gerekli' });
+    }
     const device = await prisma.device.update({
       where: { id: req.params.id },
-      data: { isActive },
+      data: {
+        ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+        ...(data.deviceName !== undefined ? { deviceName: data.deviceName } : {}),
+      },
+      include: { user: { select: { email: true } } },
     });
     res.json(device);
   } catch (e) {

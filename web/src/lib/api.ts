@@ -156,10 +156,10 @@ export const api = {
 
   adminDevices: () => request<Device[]>('/admin/devices'),
 
-  adminUpdateDevice: (id: string, isActive: boolean) =>
+  adminUpdateDevice: (id: string, data: { isActive?: boolean; deviceName?: string }) =>
     request<Device>(`/admin/devices/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ isActive }),
+      body: JSON.stringify(data),
     }),
 };
 

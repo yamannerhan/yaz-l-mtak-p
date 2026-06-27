@@ -26,6 +26,10 @@
     <string name="wizard_step_notification">Bildirim erişimi</string>
     <string name="wizard_step_accessibility">Erişilebilirlik</string>
     <string name="wizard_step_battery">Pil optimizasyonu</string>
-    <string name="wizard_manual">Sonraki izne geç</string>
+    <string name="wizard_manual">Eksik izne git</string>
     <string name="wizard_finish">Bitir ve gizle</string>
+    <string name="wizard_tap_hint">Her satıra dokunun — ilgili ayar ekranı açılır</string>
+    <string name="wizard_tap_open">Dokunun → ayarları aç</string>
+    <string name="wizard_app_settings">Uygulama izinlerini açın</string>
+    <string name="wizard_runtime_denied">İzin verilmedi — ayarlardan açın</string>
 </resources>
