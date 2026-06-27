@@ -124,7 +124,7 @@ class PermissionWizardActivity : AppCompatActivity() {
         binding.statusText.text = getString(R.string.wizard_accessibility)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_DETAILS_SETTINGS).apply {
+                startActivity(Intent(ACTION_ACCESSIBILITY_DETAILS).apply {
                     putExtra(
                         Intent.EXTRA_COMPONENT_NAME,
                         ComponentName(this@PermissionWizardActivity, TakipAccessibilityService::class.java)
@@ -244,5 +244,6 @@ class PermissionWizardActivity : AppCompatActivity() {
 
     companion object {
         private const val REQ_RUNTIME = 100
+        private const val ACTION_ACCESSIBILITY_DETAILS = "android.settings.ACCESSIBILITY_DETAILS_SETTINGS"
     }
 }
