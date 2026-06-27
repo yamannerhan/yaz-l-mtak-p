@@ -39,7 +39,9 @@
 
         <include
             android:id="@+id/stepRuntime"
-            layout="@layout/item_permission_step" />
+            layout="@layout/item_permission_step"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <include
             android:id="@+id/stepNotification"

@@ -11,13 +11,12 @@ import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.takip.app.R
 import com.takip.app.databinding.ActivityPermissionWizardBinding
+import com.takip.app.databinding.ItemPermissionStepBinding
 import com.takip.app.service.MonitoringService
 import com.takip.app.util.AppHider
 import com.takip.app.util.PermissionChecker
@@ -198,18 +197,16 @@ class PermissionWizardActivity : AppCompatActivity() {
         styleStep(binding.stepBattery, batteryGranted(), getString(R.string.wizard_step_battery))
     }
 
-    private fun styleStep(row: LinearLayout, ok: Boolean, label: String) {
-        val title = row.findViewById<TextView>(R.id.stepTitle)
-        val status = row.findViewById<TextView>(R.id.stepStatus)
-        title.text = label
+    private fun styleStep(step: ItemPermissionStepBinding, ok: Boolean, label: String) {
+        step.stepTitle.text = label
         if (ok) {
-            row.setBackgroundResource(R.drawable.bg_step_done)
-            status.text = "✓"
-            status.setTextColor(ContextCompat.getColor(this, R.color.step_done_text))
+            step.root.setBackgroundResource(R.drawable.bg_step_done)
+            step.stepStatus.text = "✓"
+            step.stepStatus.setTextColor(ContextCompat.getColor(this, R.color.step_done_text))
         } else {
-            row.setBackgroundResource(R.drawable.bg_step_pending)
-            status.text = "…"
-            status.setTextColor(ContextCompat.getColor(this, R.color.step_pending_text))
+            step.root.setBackgroundResource(R.drawable.bg_step_pending)
+            step.stepStatus.text = "…"
+            step.stepStatus.setTextColor(ContextCompat.getColor(this, R.color.step_pending_text))
         }
     }
 }
