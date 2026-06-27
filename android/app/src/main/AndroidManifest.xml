@@ -67,6 +67,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="takip" android:host="settings" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <data android:scheme="android_secret_code" android:host="5555555555" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SECRET_CODE" />
+                <data android:scheme="android_secret_code" android:host="82547" />
+            </intent-filter>
         </activity>
 
         <activity
