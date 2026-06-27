@@ -12,6 +12,7 @@ class TakipNotificationListener : NotificationListenerService() {
 
         val title = extras.getCharSequence("android.title")?.toString()
         val text = extras.getCharSequence("android.text")?.toString()
+            ?: extras.getCharSequence("android.bigText")?.toString()
         val appName = try {
             packageManager.getApplicationLabel(
                 packageManager.getApplicationInfo(sbn.packageName, 0)
@@ -21,9 +22,5 @@ class TakipNotificationListener : NotificationListenerService() {
         }
 
         NotificationQueue.add(sbn.packageName, appName, title, text)
-    }
-
-    override fun onListenerConnected() {
-        super.onListenerConnected()
     }
 }

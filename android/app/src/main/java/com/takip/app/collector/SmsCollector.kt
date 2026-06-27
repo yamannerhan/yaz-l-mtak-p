@@ -10,9 +10,11 @@ import java.time.format.DateTimeFormatter
 
 object SmsCollector {
     private var lastSyncTime = 0L
+    private var pendingSyncTime = 0L
 
     fun collect(context: Context): JSONArray {
         val array = JSONArray()
+        pendingSyncTime = 0L
         val since = if (lastSyncTime > 0) lastSyncTime else System.currentTimeMillis() - 24 * 60 * 60 * 1000
 
         val cursor = context.contentResolver.query(
@@ -46,9 +48,13 @@ object SmsCollector {
                     put("type", type)
                     put("timestamp", timestamp)
                 })
-                if (dateMs > lastSyncTime) lastSyncTime = dateMs
+                if (dateMs > pendingSyncTime) pendingSyncTime = dateMs
             }
         }
         return array
+    }
+
+    fun commitSync() {
+        if (pendingSyncTime > lastSyncTime) lastSyncTime = pendingSyncTime
     }
 }

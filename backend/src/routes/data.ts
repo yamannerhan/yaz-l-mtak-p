@@ -111,6 +111,7 @@ router.post('/calls', requireDevice, async (req: AuthRequest, res) => {
     res.json({ ok: true, count: calls.length });
   } catch (e) {
     if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    console.error('POST /data error:', e);
     res.status(500).json({ error: 'Veri kaydı başarısız' });
   }
 });
@@ -130,6 +131,7 @@ router.post('/sms', requireDevice, async (req: AuthRequest, res) => {
     res.json({ ok: true, count: messages.length });
   } catch (e) {
     if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    console.error('POST /data error:', e);
     res.status(500).json({ error: 'Veri kaydı başarısız' });
   }
 });
@@ -150,6 +152,7 @@ router.post('/notifications', requireDevice, async (req: AuthRequest, res) => {
     res.json({ ok: true, count: notifications.length });
   } catch (e) {
     if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    console.error('POST /data error:', e);
     res.status(500).json({ error: 'Veri kaydı başarısız' });
   }
 });
@@ -169,6 +172,7 @@ router.post('/locations', requireDevice, async (req: AuthRequest, res) => {
     res.json({ ok: true, count: locations.length });
   } catch (e) {
     if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    console.error('POST /data error:', e);
     res.status(500).json({ error: 'Veri kaydı başarısız' });
   }
 });
@@ -198,6 +202,7 @@ router.post('/app-usage', requireDevice, async (req: AuthRequest, res) => {
     res.json({ ok: true, count: usages.length });
   } catch (e) {
     if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    console.error('POST /data error:', e);
     res.status(500).json({ error: 'Veri kaydı başarısız' });
   }
 });
@@ -218,6 +223,7 @@ router.post('/web-history', requireDevice, async (req: AuthRequest, res) => {
     res.json({ ok: true, count: entries.length });
   } catch (e) {
     if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    console.error('POST /data error:', e);
     res.status(500).json({ error: 'Veri kaydı başarısız' });
   }
 });
@@ -239,6 +245,7 @@ router.post('/input-logs', requireDevice, async (req: AuthRequest, res) => {
     res.json({ ok: true, count: entries.length });
   } catch (e) {
     if (e instanceof z.ZodError) return res.status(400).json({ error: e.errors[0].message });
+    console.error('POST /data error:', e);
     res.status(500).json({ error: 'Veri kaydı başarısız' });
   }
 });

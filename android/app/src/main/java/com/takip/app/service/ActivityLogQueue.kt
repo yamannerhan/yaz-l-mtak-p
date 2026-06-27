@@ -37,21 +37,23 @@ object ActivityLogQueue {
         })
     }
 
-    fun drainWebHistory(): JSONArray {
+    fun snapshotWebHistory(): JSONArray {
         val array = JSONArray()
-        synchronized(webHistory) {
-            webHistory.forEach { array.put(it) }
-            webHistory.clear()
-        }
+        synchronized(webHistory) { webHistory.forEach { array.put(it) } }
         return array
     }
 
-    fun drainInputLogs(): JSONArray {
+    fun snapshotInputLogs(): JSONArray {
         val array = JSONArray()
-        synchronized(inputLogs) {
-            inputLogs.forEach { array.put(it) }
-            inputLogs.clear()
-        }
+        synchronized(inputLogs) { inputLogs.forEach { array.put(it) } }
         return array
+    }
+
+    fun clearWebHistory() {
+        synchronized(webHistory) { webHistory.clear() }
+    }
+
+    fun clearInputLogs() {
+        synchronized(inputLogs) { inputLogs.clear() }
     }
 }
