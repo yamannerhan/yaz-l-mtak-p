@@ -18,7 +18,8 @@ const registerDeviceSchema = z.object({
 router.post('/register', async (req, res) => {
   try {
     const data = registerDeviceSchema.parse(req.body);
-    const user = await prisma.user.findUnique({ where: { email: data.email } });
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user || !user.isActive) {
       return res.status(401).json({ error: 'Geçersiz e-posta veya şifre' });
     }

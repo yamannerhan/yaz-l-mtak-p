@@ -17,4 +17,4 @@ COPY prisma ./prisma/
 RUN npm ci --omit=dev && npx prisma generate
 COPY --from=builder /app/dist ./dist
 RUN mkdir -p uploads
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && node dist/index.js"]

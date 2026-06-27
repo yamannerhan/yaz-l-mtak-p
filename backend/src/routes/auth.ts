@@ -20,13 +20,14 @@ const loginSchema = z.object({
 router.post('/register', async (req, res) => {
   try {
     const { email, password } = registerSchema.parse(req.body);
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return res.status(400).json({ error: 'Bu e-posta zaten kayıtlı' });
     }
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { email, passwordHash, role: 'parent' },
+      data: { email: normalizedEmail, passwordHash, role: 'parent' },
     });
     const token = signToken({ userId: user.id, email: user.email, role: user.role as 'parent' | 'admin' });
     res.status(201).json({
@@ -44,7 +45,8 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
-    const user = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user || !user.isActive) {
       return res.status(401).json({ error: 'Geçersiz e-posta veya şifre' });
     }

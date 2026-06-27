@@ -4,6 +4,7 @@ console.log('Backend başlatılıyor...', {
   port: process.env.PORT,
   nodeEnv: process.env.NODE_ENV,
   hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+  adminEmail: process.env.ADMIN_EMAIL,
 });
 
 process.on('uncaughtException', (err) => console.error('uncaughtException:', err));
@@ -46,26 +47,51 @@ app.use('/data', dataRoutes);
 app.use('/admin', adminRoutes);
 
 async function ensureAdmin() {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@takip.local';
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@takip.local').trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!';
-  const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
-  if (!existing) {
-    const passwordHash = await bcrypt.hash(adminPassword, 12);
-    await prisma.user.create({
-      data: { email: adminEmail, passwordHash, role: 'admin' },
-    });
-    console.log(`Admin hesabı oluşturuldu: ${adminEmail}`);
-  }
+  const passwordHash = await bcrypt.hash(adminPassword, 12);
+
+  const user = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      passwordHash,
+      role: 'admin',
+      isActive: true,
+    },
+    create: {
+      email: adminEmail,
+      passwordHash,
+      role: 'admin',
+    },
+  });
+
+  console.log(`Admin hesabı hazır: ${user.email}`);
 }
 
 async function initDatabase() {
+  const appRoot = path.join(__dirname, '..');
+
+  try {
+    await prisma.$connect();
+    console.log('Veritabanı bağlantısı OK');
+  } catch (e) {
+    console.error('Veritabanı bağlantı hatası:', e);
+    return;
+  }
+
   try {
     console.log('Veritabanı senkronize ediliyor...');
-    await execAsync('npx prisma db push --accept-data-loss');
+    await execAsync('npx prisma db push --accept-data-loss', { cwd: appRoot });
+    console.log('Şema senkronize edildi');
+  } catch (e) {
+    console.error('Şema senkronizasyon hatası:', e);
+  }
+
+  try {
     await ensureAdmin();
     console.log('Veritabanı hazır');
   } catch (e) {
-    console.error('Veritabanı hatası:', e);
+    console.error('Admin hesabı oluşturulamadı:', e);
   }
 }
 
