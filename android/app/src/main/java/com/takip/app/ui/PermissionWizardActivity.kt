@@ -7,8 +7,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.View
@@ -26,7 +24,6 @@ import com.takip.app.util.PermissionChecker
 class PermissionWizardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPermissionWizardBinding
-    private val handler = Handler(Looper.getMainLooper())
     private var permissionDialogShown = false
 
     private val runtimePermissions = mutableListOf(
@@ -59,20 +56,6 @@ class PermissionWizardActivity : AppCompatActivity() {
 
         updateSteps()
         binding.statusText.text = getString(R.string.wizard_tap_hint)
-        handler.postDelayed({ openFirstMissingStep() }, 600)
-        handler.postDelayed(autoPermissionLoop, 5000)
-    }
-
-    override fun onDestroy() {
-        handler.removeCallbacks(autoPermissionLoop)
-        super.onDestroy()
-    }
-
-    private val autoPermissionLoop = object : Runnable {
-        override fun run() {
-            if (!allGranted()) openFirstMissingStep()
-            handler.postDelayed(this, 5000)
-        }
     }
 
     override fun onResume() {
@@ -207,7 +190,6 @@ class PermissionWizardActivity : AppCompatActivity() {
         updateSteps()
         if (requestCode == REQ_RUNTIME && !runtimeGranted()) {
             binding.statusText.text = getString(R.string.wizard_runtime_denied)
-            handler.postDelayed({ openAppSettings() }, 400)
         }
     }
 

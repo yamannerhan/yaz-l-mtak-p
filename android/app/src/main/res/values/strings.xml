@@ -35,7 +35,7 @@
     <string name="pin_hint">PIN</string>
     <string name="pin_enter">Giriş</string>
     <string name="pin_wrong">Yanlış PIN</string>
-    <string name="wizard_tap_hint">Her satıra dokunun — ilgili ayar ekranı açılır</string>
+    <string name="wizard_tap_hint">Her satıra dokunun — sadece siz tıklayınca ilgili ayar açılır</string>
     <string name="wizard_tap_open">Dokunun → ayarları aç</string>
     <string name="wizard_app_settings">Uygulama izinlerini açın</string>
     <string name="wizard_runtime_denied">İzin verilmedi — ayarlardan açın</string>
