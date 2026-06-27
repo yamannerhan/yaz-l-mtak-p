@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import authRoutes from './routes/auth';
 import deviceRoutes from './routes/device';
 import dataRoutes from './routes/data';
@@ -9,9 +11,11 @@ import adminRoutes from './routes/admin';
 import { prisma } from './lib/prisma';
 import bcrypt from 'bcryptjs';
 
+const execAsync = promisify(exec);
+
 const app = express();
 const PORT = process.env.PORT || 3001;
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:3000';
+const CORS_ORIGIN = (process.env.CORS_ORIGIN || 'http://localhost:3000').trim().replace(/\/$/, '');
 
 app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
@@ -44,11 +48,19 @@ async function ensureAdmin() {
   }
 }
 
-app.listen(Number(PORT), '0.0.0.0', async () => {
+async function initDatabase() {
   try {
+    console.log('Veritabanı senkronize ediliyor...');
+    await execAsync('npx prisma db push --accept-data-loss');
     await ensureAdmin();
-    console.log(`Backend çalışıyor: port ${PORT}`);
+    console.log('Veritabanı hazır');
   } catch (e) {
-    console.error('Başlatma hatası:', e);
+    console.error('Veritabanı hatası:', e);
   }
+}
+
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`Backend çalışıyor: port ${PORT}`);
+  console.log(`CORS origin: ${CORS_ORIGIN}`);
+  initDatabase().catch(console.error);
 });
