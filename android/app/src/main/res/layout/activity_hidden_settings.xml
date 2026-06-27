@@ -35,4 +35,12 @@
         android:text="İzinleri Kontrol Et"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
+    <TextView
+        android:id="@+id/secretCodeText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:textSize="12sp"
+        android:textColor="#6B7280" />
+
 </LinearLayout>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api, Device, isOnline, formatDate } from '@/lib/api';
+import { api, Device, isOnline, onlineLabel, formatDate } from '@/lib/api';
 import Link from 'next/link';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { PermissionPanel } from '@/components/PermissionPanel';
@@ -69,11 +69,14 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <span className={isOnline(device.lastSeen) ? 'badge-green' : 'badge-gray'}>
-                  {isOnline(device.lastSeen) ? 'Çevrimiçi' : 'Çevrimdışı'}
+                  {onlineLabel(device.lastSeen)}
                 </span>
               </div>
               <p className="text-sm text-gray-500 mb-2">
-                Son görülme: {device.lastSeen ? formatDate(device.lastSeen) : 'Hiç'}
+                Son senkron (bulut): {device.lastSeen ? formatDate(device.lastSeen) : 'Hiç'}
+              </p>
+              <p className="text-xs text-gray-400 mb-2">
+                Bilgisayarınız kapalı olsa da telefon Railway sunucusuna bağlanır.
               </p>
 
               <PermissionPanel device={device} />

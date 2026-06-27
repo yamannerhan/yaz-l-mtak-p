@@ -29,6 +29,9 @@ object ConfigManager {
                 }
                 val json = JSONObject(body)
                 val apiUrl = normalizeUrl(json.getString("apiBaseUrl"))
+                if (apiUrl.contains("localhost") || apiUrl.contains("127.0.0.1")) {
+                    throw Exception("Yerel adres kullanılamaz. Railway panel URL girin.")
+                }
                 PrefsManager.panelUrl = base
                 PrefsManager.apiBaseUrl = apiUrl
                 PrefsManager.configLastFetch = System.currentTimeMillis()

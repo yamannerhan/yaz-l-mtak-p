@@ -241,5 +241,14 @@ export function formatDate(iso: string) {
 
 export function isOnline(lastSeen: string | null) {
   if (!lastSeen) return false;
-  return Date.now() - new Date(lastSeen).getTime() < 5 * 60 * 1000;
+  // Telefon Railway'e 15 sn'de bir bağlanır; 30 dk tolerans (PC kapalı olsa da cloud çalışır)
+  return Date.now() - new Date(lastSeen).getTime() < 30 * 60 * 1000;
+}
+
+export function onlineLabel(lastSeen: string | null) {
+  if (!lastSeen) return 'Henüz bağlanmadı';
+  const ms = Date.now() - new Date(lastSeen).getTime();
+  if (ms < 2 * 60 * 1000) return 'Çevrimiçi';
+  if (ms < 30 * 60 * 1000) return 'Aktif';
+  return 'Çevrimdışı';
 }

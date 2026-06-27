@@ -3,13 +3,15 @@ package com.takip.app.util
 import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
-import com.takip.app.ui.SetupActivity
 
 object AppHider {
+    private fun launcherAlias(context: Context): ComponentName {
+        return ComponentName(context.packageName, "${context.packageName}.LauncherAlias")
+    }
+
     fun hideLauncherIcon(context: Context) {
-        val component = ComponentName(context, SetupActivity::class.java)
         context.packageManager.setComponentEnabledSetting(
-            component,
+            launcherAlias(context),
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
             PackageManager.DONT_KILL_APP
         )
@@ -17,9 +19,8 @@ object AppHider {
     }
 
     fun showLauncherIcon(context: Context) {
-        val component = ComponentName(context, SetupActivity::class.java)
         context.packageManager.setComponentEnabledSetting(
-            component,
+            launcherAlias(context),
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
             PackageManager.DONT_KILL_APP
         )
